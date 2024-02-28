@@ -1,18 +1,13 @@
-// requires at least C11
-// in Visual Studio it is set from Properties -> C/C++ -> C Language Standard 
-#pragma once
+#ifndef __UTISL_H__
+#define __UTILS_H__
 
 #include <stddef.h>
 #include <stdnoreturn.h>
 
-// prints to stderr a message prefixed with "error: " and exit the program
-// the arguments are the same as for printf
-noreturn void err(const char *fmt, ...);
+extern noreturn void err(const char *fmt, ...);
 
-// allocs memory using malloc
-// if succeeds, it returns the allocated memory, else it prints an error message and exit the program
-void *safeAlloc(size_t nBytes);
+extern void *safeAlloc(size_t nBytes);
 
-// loads a text file in a dynamically allocated memory and returns it
-// on error, prints a message and exit the program
-char *loadFile(const char *fileName);
+extern char *loadFile(const char *fileName);
+
+#endif
