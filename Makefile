@@ -13,10 +13,22 @@ SRCS=$(wildcard $(SRC)/*.c)
 OBJS=$(patsubst $(SRC)/%.c, $(OBJ)/%.o, $(SRCS))
 TEST_BIN=$(TEST)/main
 TEST_SRC=$(TEST)/main.c
+SAMPLE_FILE=$(TEST)/samples/testlex.c
 
-all: $(TEST_BIN)
+all: $(OBJS) $(TEST_BIN)
 
-$(TEST_BIN): $(TEST_SRC) $(OBJS) $(OBJ)
+test: $(TEST_BIN)
+
+objs: $(OBJS)
+
+run: all
+	./$(TEST_BIN) $(SAMPLE_FILE)
+
+clean:
+	find . -type f | xargs touch
+	$(RM) $(RMFLAGS) $(OBJ) $(TEST_BIN)
+
+$(TEST_BIN): $(TEST_SRC)
 	$(CC) $(CFLAGS) $(TEST_SRC) $(OBJS) -o $@ $(LIBS)
 
 $(OBJ)/%.o: $(SRC)/%.c $(OBJ)
@@ -25,11 +37,4 @@ $(OBJ)/%.o: $(SRC)/%.c $(OBJ)
 $(OBJ):
 	mkdir -p $@
 
-run: $(TEST_BIN)
-	./$(TEST_BIN)
-
-clean:
-	find . -type f | xargs touch
-	$(RM) $(RMFLAGS) $(OBJ) $(TEST_BIN)
-
-.PHONY: all run clean
+.PHONY: all test objs run clean
