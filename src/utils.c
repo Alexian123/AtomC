@@ -1,8 +1,8 @@
+#include "utils.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-
-#include "utils.h"
 
 void err(const char *fmt, ...) {
 	fprintf(stderr, "error: ");

@@ -1,9 +1,12 @@
 #ifndef __LEXER_H__
 #define __LEXER_H__
 
-#define NUM_POSSIBLE_TOKENS 34
+#define NUM_POSSIBLE_TOKENS 38
+#define MAX_TOKEN_NAME_LEN 16
+#define NUM_REGEX 4
+#define MAX_PATTERN_LEN 64
 
-// Token codes (0 - NUM_POSSIBLE_TOKENS)
+// Token codes
 enum 
 {
 	// identifiers
@@ -12,11 +15,20 @@ enum
 	// keywords
 	TYPE_INT, TYPE_CHAR, TYPE_DOUBLE, IF, ELSE, WHILE, VOID, RETURN, STRUCT,
 
+	// constants
+	INT, DOUBLE, CHAR, STRING,
+
 	// delimiters
 	COMMA, SEMICOLON, LPAR, RPAR, LBRACKET, RBRACKET, LACC, RACC, END,
 
 	// operators
 	ADD, SUB, MUL, DIV, DOT, AND, OR, NOT, ASSIGN, EQUAL, NOTEQ, LESS, LESSEQ, GREATER, GREATEREQ
+};
+
+// RegEx
+enum
+{
+	MATCH_INT, MATCH_DOUBLE, MATCH_CHAR, MATCH_STRING
 };
 
 typedef struct _Token

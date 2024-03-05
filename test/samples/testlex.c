@@ -10,6 +10,6 @@ int main()
 		}
 	if(4.9==49e-1&&0.49E1==2.45*2.0)puts("yes");
 	putc('#');
-	puts("");	// pentru \n
+	puts("\n");	// pentru \n
 	return 0;
 }

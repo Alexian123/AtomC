@@ -5,6 +5,7 @@
 #include "utils.h"
 
 int main(int argc, char **argv) {
+
     if (argc != 2) {
         err("Usage: %s <source_file>", argv[0]);
     }
@@ -15,6 +16,7 @@ int main(int argc, char **argv) {
     Token *tokens = tokenize(file_buf);
     free(file_buf);
 
+    freopen("test/atom_list.txt", "w", stdout);
     showTokens(tokens);
 
     return 0;

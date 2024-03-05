@@ -1,2 +1,4 @@
 obj
 test/main
+test/*.txt
+.vscode
