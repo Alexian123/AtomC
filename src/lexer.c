@@ -54,7 +54,7 @@ void showTokens(const Token *tokens) {
 				printf(":%d\n", tk->i);
 				break;
 			case DOUBLE:
-				printf(":%lf\n", tk->d);
+				printf(":%.10f\n", tk->d);
 				break;
 			case CHAR:
 				printf(":%d\n", tk->c);
@@ -90,8 +90,8 @@ Token *tokenize(const char *pch) {
 			case '+': addTk(ADD); ++pch; break;
 			case '-': addTk(SUB); ++pch; break;
 			case '*': addTk(MUL); ++pch; break;
-			case '.': addTk(DOT); ++pch; break;
 			case '!': addTk(NOT); ++pch; break;
+			case '.': addTk(DOT); ++pch; break;
 
 			case '/':
 				if (pch[1] == '/') { // sngle-line comment
@@ -205,6 +205,8 @@ Token *tokenize(const char *pch) {
 							tk = addTk(DOUBLE);
 							tk->d = atof(text);
 							free(text);
+						} else {
+							err("Invalid DOUBLE constant on line %d\n", line);
 						}
 					} else {	// integer constant
 						text = extract(pch, pch + match->rm_eo);
@@ -230,7 +232,7 @@ Token *tokenize(const char *pch) {
 					tk->text = extract(text + 1, text + strlen(text) - 1);
 					free(text);	
 				} else { // error
-					err("invalid char on line %d: \'%c\' (ASCII: %d)", line, *pch, *pch);
+					err("invalid character on line %d: \'%c\' (ASCII: %d)", line, *pch, *pch);
 				}
 		}
 	}
