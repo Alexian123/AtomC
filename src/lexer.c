@@ -108,7 +108,7 @@ Token *tokenize(const char *pch) {
 					addTk(AND);
 					pch += 2;
 				} else {
-					err("invalid char on line %d: \'%c\' (ASCII: %d)", line, *pch, *pch);
+					err("invalid character on line %d: \'%c\' (ASCII: %d)", line, *pch, *pch);
 				}
 				break;
 
@@ -117,7 +117,7 @@ Token *tokenize(const char *pch) {
 					addTk(OR);
 					pch += 2;
 				} else {
-					err("invalid char on line %d: \'%c\' (ASCII: %d)", line, *pch, *pch);
+					err("invalid character on line %d: \'%c\' (ASCII: %d)", line, *pch, *pch);
 				}
 				break;
 
