@@ -20,12 +20,12 @@ RETURN: "return"
 STRUCT: "struct"
 ```
 
-### Constants (regex patterns in C-string format)
+### Constants
 ```
-INT: "^(0|[1-9][0-9]*)",
-DOUBLE: "^[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?",
-CHAR: "^'([^'\\\\]|\\\\['nrt0\\\\])'"
-STRING: "^\"([^\"\\\\]|\\\\['\"nrt0\\\\])*\""
+INT: [0-9]+
+DOUBLE: [0-9]+ ( '.' [0-9]+ ( [eE] [+-]? [0-9]+ )? | ( '.' [0-9]+ )? [eE] [+-]? [0-9]+ )
+CHAR: ['] [^'] [']
+STRING: ["] [^"]* ["]
 ```
 
 ### Delimiters

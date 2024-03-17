@@ -5,15 +5,12 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
-#include <regex.h>
 
-// patterns for regular expressions
-static const char PATTERNS[NUM_REGEX][MAX_PATTERN_LEN] = {
-    "^(0|[1-9][0-9]*)",
-    "^[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?",
-    "^'([^'\\\\]|\\\\['nrt0\\\\])'",
-    "^\"([^\"\\\\]|\\\\['\"nrt0\\\\])*\""
-};
+#define NUM_POSSIBLE_TOKENS 38
+#define MAX_TOKEN_NAME_LEN 16
+
+// valid escape characters
+static const char *ESCAPE_CHARS = "nrt\\\'\"";
 
 // must be in the same order as the Token codes
 static const char TOKEN_NAMES[NUM_POSSIBLE_TOKENS][MAX_TOKEN_NAME_LEN] = {
@@ -24,22 +21,19 @@ static const char TOKEN_NAMES[NUM_POSSIBLE_TOKENS][MAX_TOKEN_NAME_LEN] = {
 	"ADD", "SUB", "MUL", "DIV", "DOT", "AND", "OR", "NOT", "ASSIGN", "EQUAL", "NOTEQ", "LESS", "LESSEQ", "GREATER", "GREATEREQ"
 };
 
-static regex_t regex[NUM_REGEX];
-
 static Token *tokens;	// single linked list of tokens
 static Token *lastTk;	// the last token in the list
 
 static int line = 1;	// the current line in the input file
-
-// initialize & deinitialize regular expressions
-static void initRegex();
-static void deinitRegex();
 
 // adds a token to the end of the tokens list and returns it; sets its code and line
 static Token *addTk(int code);
 
 // extracts substring from begin to (end - 1)
 static char *extract(const char *begin, const char *end);
+
+// returns a new string after parsing the escape characters from the input string
+static char *parseEscapeChars(const char *input);
 
 void showTokens(const Token *tokens) {
 	printf("LINE\tNAME:VALUE\n");
@@ -57,7 +51,10 @@ void showTokens(const Token *tokens) {
 				printf(":%.10f\n", tk->d);
 				break;
 			case CHAR:
-				printf(":%d\n", tk->c);
+				if (tk->c == '\n') printf(":\\n\n");
+				else if (tk->c == '\r') printf(":\\r\n");
+				else if (tk->c =='\t') printf(":\\t\n");
+				else printf(":%c\n", tk->c);
 				break;
 			default:
 				printf("\n");
@@ -70,8 +67,6 @@ Token *tokenize(const char *pch) {
 	const char *start;
 	char *text;
 	Token *tk;
-	regmatch_t match[1];
-	initRegex();
 	for (;;) {
 		switch (*pch) {
 			// delimiters
@@ -91,7 +86,13 @@ Token *tokenize(const char *pch) {
 			case '-': addTk(SUB); ++pch; break;
 			case '*': addTk(MUL); ++pch; break;
 			case '!': addTk(NOT); ++pch; break;
-			case '.': addTk(DOT); ++pch; break;
+			case '.': 
+				if (isalpha(pch[1])) {
+					addTk(DOT); 
+					++pch; 
+					break;
+				}
+				err("Invalid character on line %d: \'%c\' (ASCII: %d)\nExpected an identifier before & after DOT operator", line, *pch, *pch);
 
 			case '/':
 				if (pch[1] == '/') { // sngle-line comment
@@ -107,19 +108,17 @@ Token *tokenize(const char *pch) {
 				if (pch[1] == '&') {
 					addTk(AND);
 					pch += 2;
-				} else {
-					err("invalid character on line %d: \'%c\' (ASCII: %d)", line, *pch, *pch);
+					break;
 				}
-				break;
+				err("Invalid character on line %d: \'%c\' (ASCII: %d)\nExpected a second \'%c\'", line, *pch, *pch, *pch);
 
 			case '|':
 				if (pch[1] == '|') {
 					addTk(OR);
 					pch += 2;
-				} else {
-					err("invalid character on line %d: \'%c\' (ASCII: %d)", line, *pch, *pch);
+					break;
 				}
-				break;
+				err("Invalid character on line %d: \'%c\' (ASCII: %d)\nExpected a second \'%c\'", line, *pch, *pch, *pch);
 
 			case '=':
 				if (pch[1] == '=') {
@@ -192,64 +191,84 @@ Token *tokenize(const char *pch) {
 						free(text);
 					} else {	// non-keyword ID
 						tk = addTk(ID);
-						tk->text = text;
+						tk->text = text;  
 					}
-				} else if (regexec(&regex[MATCH_INT], pch, 1, match, 0) == 0) { // numeric constant
-					// constant may be a double so we must check for period or e/E
-					char test_char = *(pch + match->rm_eo);
-					regmatch_t temp_match[1];
-					if (test_char == '.' || test_char == 'e' || test_char == 'E') {
-						if (regexec(&regex[MATCH_DOUBLE], pch, 1, temp_match, 0) == 0) {	// double constant
-							text = extract(pch, pch + temp_match->rm_eo);
-							pch += temp_match->rm_eo;
-							tk = addTk(DOUBLE);
-							tk->d = atof(text);
-							free(text);
-						} else {
-							err("Invalid DOUBLE constant on line %d\n", line);
+				} else if (isdigit(*pch)) {		// numeric constant
+					for (start = pch++; isdigit(*pch); ++pch);
+					if (*pch == '.' || *pch == 'e' || *pch == 'E') {	// double 
+						int num_digits = 0;
+						if (*pch == '.') {
+							++pch;
+							for (; isdigit(*pch); ++pch, ++num_digits);	// fractional part
+							if (num_digits == 0 && tolower(*pch) != 'e') {	// no digits after '.'
+								text = extract(start, pch);
+								err("Invalid double constant on line %d: %s", line, text);
+							}
 						}
-					} else {	// integer constant
-						text = extract(pch, pch + match->rm_eo);
-						pch += match->rm_eo;
+						if (*pch == 'e' || *pch == 'E')	{
+							++pch;
+							if (*pch == '+' || *pch == '-') {
+								++pch;
+							}
+							for (num_digits = 0; isdigit(*pch); ++pch, ++num_digits);	// exponent
+							if (num_digits == 0) {	// no digits after exponent
+								text = extract(start, pch);
+								err("Invalid double constant on line %d: %s", line, text);
+							}
+						}
+						text = extract(start, pch);
+						tk = addTk(DOUBLE);
+						tk->d = atof(text);
+						free(text);
+					}  else {	// integer
+						text = extract(start, pch);
 						tk = addTk(INT);
 						tk->i = atoi(text);
 						free(text);
 					}
-				} else if (regexec(&regex[MATCH_CHAR], pch, 1, match, 0) == 0) {	// character constant
-					text = extract(pch, pch + match->rm_eo);
-					pch += match->rm_eo;
-					tk = addTk(CHAR);
-					if (strcmp(text, "'\\n'") == 0)			tk->c = '\n';
-					else if (strcmp(text, "'\\r'") == 0)	tk->c = '\r';
-					else if (strcmp(text, "'\\t'") == 0)	tk->c = '\t';
-					else if (strcmp(text, "'\\0'") == 0)	tk->c = '\0';
-					else									tk->c = text[1];
-					free(text);
-				} else if (regexec(&regex[MATCH_STRING], pch, 1, match, 0) == 0) {	// string constant
-					text = extract(pch, pch + match->rm_eo);
-					pch += match->rm_eo;
-					tk = addTk(STRING);
-					tk->text = extract(text + 1, text + strlen(text) - 1);
-					free(text);	
+				} else if (*pch == '\'') {		// character constant
+					start = pch++;
+					if (*pch == '\\' && strchr(ESCAPE_CHARS, pch[1]) && pch[2] == '\'') {	// excape character
+						tk = addTk(CHAR);
+						switch (pch[1]) {
+							case 'n': tk->c = '\n'; break;
+							case 'r': tk->c = '\r'; break;
+							case 't': tk->c = '\t'; break;
+							default: tk->c = pch[1];
+						}
+						pch += 3;
+					} else if (*pch != '\\' && *pch != '\'' && pch[1] == '\'')  {	// ascii character (except \ and ')
+						tk = addTk(CHAR);
+						tk->c = *pch;
+						pch += 2;
+					} else {
+						for (; *pch != '\n' && *pch != '\r' && *pch != '\0'; ++pch);	// find newline
+						text = extract(start, pch);
+						err("Invalid character constant on line %d: %s", line, text);
+					}
+				} else if (*pch == '"') {		// string constant
+					for (start = ++pch; *pch != '"' && *pch != '\n' && *pch != '\r' && *pch != '\0'; ++pch) {
+						if (*pch == '\\' && pch[1] == '"') {	// skip escaped double quote 
+							++pch;
+						} else if (*pch == '\\' && !strchr(ESCAPE_CHARS, pch[1])) {	// invalid escape character
+							text = extract(start - 1, pch + 2);
+							err("Invalid string constant on line %d: %s\nBad escape character", line, text);
+						}
+					}
+					if (*pch == '"') {
+						tk = addTk(STRING);
+						text = extract(start, pch);
+						tk->text = parseEscapeChars(text);
+						free(text);
+						++pch;
+					} else {
+						text = extract(start - 1, pch);
+						err("Invalid string constant on line %d: %s\nMissing end double-quote", line, text);
+					}
 				} else { // error
-					err("invalid character on line %d: \'%c\' (ASCII: %d)", line, *pch, *pch);
+					err("Invalid character on line %d: \'%c\' (ASCII: %d)", line, *pch, *pch);
 				}
 		}
-	}
-	deinitRegex();
-}
-
-void initRegex() {
-	for (int i = 0; i < NUM_REGEX; ++i) {
-		if (regcomp(&regex[i], PATTERNS[i], REG_EXTENDED) != 0) {
-			err("Error compiling regex: \"%s\"\n", PATTERNS[i]);
-		}
-	}
-}
-
-void deinitRegex() {
-	for (int i = 0; i < NUM_REGEX; ++i) {
-		regfree(&regex[i]);
 	}
 }
 
@@ -275,4 +294,24 @@ char *extract(const char *begin, const char *end) {
 	}
 	substr[n] = '\0';
 	return substr;
+}
+
+static char *parseEscapeChars(const char *input) {
+	char *s = safeAlloc(strlen(input) + 1);
+	int n = 0;
+	for (; *input != '\0'; ++input) {
+		if (*input == '\\') {
+			switch (input[1]) {
+				case 'n': s[n++] = '\n'; break;
+				case 'r': s[n++] = '\r'; break;
+				case 't': s[n++] = '\t'; break;
+				default: s[n++] = input[1];
+			}
+			++input;
+			continue;
+		}
+		s[n++] = *input;
+	}
+	s[n] = '\0';
+	return s;
 }

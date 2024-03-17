@@ -5,7 +5,7 @@
 #include <stdarg.h>
 
 void err(const char *fmt, ...) {
-	fprintf(stderr, "error: ");
+	fprintf(stderr, "Error: ");
 	va_list va;
 	va_start(va, fmt);
 	vfprintf(stderr, fmt, va);
@@ -17,7 +17,7 @@ void err(const char *fmt, ...) {
 void *safeAlloc(size_t nBytes) {
 	void *p=malloc(nBytes);
 	if (!p) {
-		err("not enough memory");
+		err("Not enough memory");
 	}
 	return p;
 }
@@ -25,7 +25,7 @@ void *safeAlloc(size_t nBytes) {
 char *loadFile(const char *fileName) {
 	FILE *fis = fopen(fileName, "rb");
 	if (!fis) {
-		err("unable to open %s", fileName);
+		err("Unable to open %s", fileName);
 	}
 	fseek(fis, 0, SEEK_END);
 	size_t n = (size_t) ftell(fis);
@@ -34,7 +34,7 @@ char *loadFile(const char *fileName) {
 	size_t nRead = fread(buf, sizeof(char), (size_t) n, fis);
 	fclose(fis);
 	if (n != nRead) {
-		err("cannot read all the content of %s", fileName);
+		err("Cannot read all the content of %s", fileName);
 	}
 	buf[n] = '\0';
 	return buf;

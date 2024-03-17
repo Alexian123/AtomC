@@ -11,7 +11,7 @@ int main(int argc, char **argv) {
     }
 
     char *file_buf = loadFile(argv[1]);
-    printf("Source file content:\n=== BEGIN ===\n%s=== END ===\n", file_buf);
+    //printf("Source file content:\n=== BEGIN ===\n%s=== END ===\n", file_buf);
 
     Token *tokens = tokenize(file_buf);
     free(file_buf);
