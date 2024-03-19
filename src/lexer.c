@@ -92,7 +92,7 @@ Token *tokenize(const char *pch) {
 					++pch; 
 					break;
 				}
-				err("Invalid character on line %d: \'%c\' (ASCII: %d)\nExpected an identifier before & after DOT operator", line, *pch, *pch);
+				err("Invalid operator on line %d: \'%c\' (ASCII: %d)\nExpected an identifier before & after DOT operator", line, *pch, *pch);
 
 			case '/':
 				if (pch[1] == '/') { // sngle-line comment
@@ -110,7 +110,7 @@ Token *tokenize(const char *pch) {
 					pch += 2;
 					break;
 				}
-				err("Invalid character on line %d: \'%c\' (ASCII: %d)\nExpected a second \'%c\'", line, *pch, *pch, *pch);
+				err("Invalid operator on line %d: \'%c\' (ASCII: %d)\nExpected a second \'%c\'", line, *pch, *pch, *pch);
 
 			case '|':
 				if (pch[1] == '|') {
@@ -118,7 +118,7 @@ Token *tokenize(const char *pch) {
 					pch += 2;
 					break;
 				}
-				err("Invalid character on line %d: \'%c\' (ASCII: %d)\nExpected a second \'%c\'", line, *pch, *pch, *pch);
+				err("Invalid operator on line %d: \'%c\' (ASCII: %d)\nExpected a second \'%c\'", line, *pch, *pch, *pch);
 
 			case '=':
 				if (pch[1] == '=') {
