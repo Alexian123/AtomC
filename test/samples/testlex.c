@@ -12,19 +12,5 @@ int main()
 	putc('#');
 	puts("\n");	// pentru \n
 
-	struct S
-	{
-		int x;
-		double y;
-		char z;
-		char str[16];
-	};
-
-	S s;
-	s.x = 134541;
-	s.y = 1.03E-7;
-	s.y = 1e+10;
-	strcpy(s.str, "Hello, World!\n");
-
 	return 0;
 }
