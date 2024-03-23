@@ -5,11 +5,22 @@
 #include <stdarg.h>
 #include <stdbool.h>
 
-Token *iTk;		// the iterator in the tokens list
-Token *consumedTk;		// the last consumed token
+static Token *iTk;			// the iterator in the tokens list
+static Token *consumedTk;	// the last consumed token
+
+static void tkerr(const char *fmt, ...);
+static bool consume(int code);
+
+static bool typeBase();	// typeBase: TYPE_INT | TYPE_DOUBLE | TYPE_CHAR | STRUCT ID
+static bool unit();		// unit: ( structDef | fnDef | varDef )* END
+
+void parse(Token *tokens) {
+	iTk = tokens;
+	if (!unit()) tkerr("syntax error");
+}
 
 void tkerr(const char *fmt, ...) {
-	fprintf(stderr, "error in line %d: ", iTk->line);
+	fprintf(stderr, "Error in line %d: ", iTk->line);
 	va_list va;
 	va_start(va, fmt);
 	vfprintf(stderr, fmt, va);
@@ -27,7 +38,6 @@ bool consume(int code) {
 	return false;
 }
 
-// typeBase: TYPE_INT | TYPE_DOUBLE | TYPE_CHAR | STRUCT ID
 bool typeBase() {
 	if (consume(TYPE_INT)) {
 		return true;
@@ -46,7 +56,6 @@ bool typeBase() {
 	return false;
 }
 
-// unit: ( structDef | fnDef | varDef )* END
 bool unit() {
 	for (;;) {
 		if (structDef()) {}
@@ -58,9 +67,4 @@ bool unit() {
 		return true;
 	}
 	return false;
-}
-
-void parse(Token *tokens) {
-	iTk = tokens;
-	if (!unit()) tkerr("syntax error");
 }
