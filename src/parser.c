@@ -11,12 +11,33 @@ static Token *consumedTk;	// the last consumed token
 static void tkerr(const char *fmt, ...);
 static bool consume(int code);
 
-static bool typeBase();	// typeBase: TYPE_INT | TYPE_DOUBLE | TYPE_CHAR | STRUCT ID
-static bool unit();		// unit: ( structDef | fnDef | varDef )* END
+static bool unit();
+static bool structDef();
+static bool varDef();
+static bool typeBase();
+static bool arrayDecl();
+static bool fnDef();
+static bool fnParam();
+static bool stm();
+static bool stmCompound();
+static bool expr();
+static bool exprAssign();
+static bool exprOr();
+static bool exprAnd();
+static bool exprEq();
+static bool exprRel();
+static bool exprAdd();
+static bool exprMul();
+static bool exprCast();
+static bool exprUnary();
+static bool exprPostfix();
+static bool exprPrimary();
 
 void parse(Token *tokens) {
 	iTk = tokens;
-	if (!unit()) tkerr("syntax error");
+	if (!unit()) {
+		tkerr("syntax error");
+	}
 }
 
 void tkerr(const char *fmt, ...) {
@@ -38,7 +59,56 @@ bool consume(int code) {
 	return false;
 }
 
+bool unit() {
+	for (;;) {
+		if (structDef()) {}
+		else if (fnDef()) {}
+		else if (varDef()) {}
+		else break;
+	}
+	if (consume(END)) {
+		return true;
+	}
+	return false;
+}
+
+bool structDef() {
+	Token *start = iTk;
+	if (consume(STRUCT)) {
+		if (consume(ID)) {
+			if (consume(LACC)) {
+				for (;;) {
+					if (vardef()) {}
+					else break;
+				}
+				if (consume(RACC)) {
+					if (consume(SEMICOLON)) {
+						return true;
+					}
+				}
+			}
+		}
+	}
+	iTk = start;
+	return false;
+}
+
+static bool varDef() {
+	Token *start = iTk;
+	if (typeBase()) {
+		if (consume(ID)) {
+			if (arrayDecl()) {}
+			if (consume(SEMICOLON)) {
+				return true;
+			}
+		}
+	}
+	iTk = start;
+	return false;
+}
+
 bool typeBase() {
+	Token *start = iTk;
 	if (consume(TYPE_INT)) {
 		return true;
 	}
@@ -53,18 +123,115 @@ bool typeBase() {
 			return true;
 		}
 	}
+	iTk = start;
 	return false;
 }
 
-bool unit() {
-	for (;;) {
-		if (structDef()) {}
-		else if (fnDef()) {}
-		else if (varDef()) {}
-		else break;
+bool arrayDecl() {
+	Token *start = iTk;
+	if (consume(LBRACKET)) {
+		if (consume(INT)) {}
+		if (consume(RBRACKET)) {
+			return true;
+		}
 	}
-	if (consume(END)) {
-		return true;
+	iTk = start;
+	return false;
+}
+
+bool fnDef() {
+	Token *start = iTk;
+	if (typeBase() || consume(VOID)) {
+		if (consume(ID)) {
+			if (consume(LPAR)) {
+				if (fnParam()) {
+					while (consume(COMMA)) {
+						if (fnParam()) {}
+						else tkerr("Missing additional function parameter after comma");
+					}
+				}
+				if (consume(RPAR)) {
+					if (stmCompound) {
+						return true;
+					}
+				}
+			}
+		}
 	}
+	iTk = start;
+	return false;
+}
+
+bool fnParam() {
+
+	return false;
+}
+
+bool stm() {
+
+	return false;
+}
+
+bool stmCompound() {
+
+	return false;
+}
+
+bool expr() {
+
+	return false;
+}
+
+bool exprAssign() {
+
+	return false;
+}
+
+bool exprOr() {
+
+	return false;
+}
+
+bool exprAnd() {
+
+	return false;
+}
+
+bool exprEq() {
+
+	return false;
+}
+
+bool exprRel() {
+
+	return false;
+}
+
+bool exprAdd() {
+
+	return false;
+}
+
+bool exprMul() {
+
+	return false;
+}
+
+bool exprCast() {
+
+	return false;
+}
+
+bool exprUnary() {
+
+	return false;
+}
+
+bool exprPostfix() {
+
+	return false;
+}
+
+bool exprPrimary() {
 	return false;
 }
