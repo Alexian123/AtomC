@@ -85,7 +85,7 @@ bool structDef() {
 		if (consume(ID)) {
 			if (consume(LACC)) {
 				for (;;) {
-					if (vardef()) {}
+					if (varDef()) {}
 					else break;
 				}
 				if (consume(RACC)) {
@@ -154,11 +154,11 @@ bool fnDef() {
 				if (fnParam()) {
 					while (consume(COMMA)) {
 						if (fnParam()) {}
-						else tkerr("Missing additional function parameter after comma");
+						else tkerr("Missing/invalid additional function parameter after comma");
 					}
 				}
 				if (consume(RPAR)) {
-					if (stmCompound) {
+					if (stmCompound()) {
 						return true;
 					}
 				}
@@ -193,7 +193,7 @@ bool stm() {
 					if (stm()) {
 						if (consume(ELSE)) {
 							if (stm()) {}
-							else tkerr("Empty else statement");
+							else tkerr("Missing/invalid statement after \"else\" keyword");
 						}
 						return true;
 					}
@@ -281,75 +281,203 @@ bool _exprOr() {
 }
 
 bool exprAnd() {
-
+	if (exprEq()) {
+		if (_exprAnd()) {
+			return true;
+		}
+	}
 	return false;
 }
 
 bool _exprAnd() {
-
-	return false;
+	Token *start = iTk;
+	if (consume(AND)) {
+		if (exprEq()) {
+			if (_exprAnd()) {
+				return true;
+			}
+		}
+	}
+	iTk = start;
+	return true;
 }
 
 bool exprEq() {
-
+	if (exprRel()) {
+		if (_exprEq()) {
+			return true;
+		}
+	}
 	return false;
 }
 
 bool _exprEq() {
-
-	return false;
+	Token *start = iTk;
+	if (consume(EQUAL) || consume(NOTEQ)) {
+		if (exprRel()) {
+			if (_exprEq()) {
+				return true;
+			}
+		}
+	}
+	iTk = start;
+	return true;
 }
 
 bool exprRel() {
-
+	if (exprAdd()) {
+		if (_exprRel()) {
+			return true;
+		}
+	}
 	return false;
 }
 
 bool _exprRel() {
-
-	return false;
+	Token *start = iTk;
+	if (consume(LESS) || consume(LESSEQ) || consume(GREATER) || consume(GREATEREQ)) {
+		if (exprAdd()) {
+			if (_exprRel()) {
+				return true;
+			}
+		}
+	}
+	iTk = start;
+	return true;
 }
 
 bool exprAdd() {
-
+	if (exprMul()) {
+		if (_exprAdd()) {
+			return true;
+		}
+	}
 	return false;
 }
 
 bool _exprAdd() {
-
-	return false;
+	Token *start = iTk;
+	if (consume(ADD) || consume(SUB)) {
+		if (exprMul()) {
+			if (_exprAdd()) {
+				return true;
+			}
+		}
+	}
+	iTk = start;
+	return true;
 }
 
 bool exprMul() {
-
+	if (exprCast()) {
+		if (_exprMul()) {
+			return true;
+		}
+	}
 	return false;
 }
 
 bool _exprMul() {
-
-	return false;
+	Token *start = iTk;
+	if (consume(MUL) || consume(DIV)) {
+		if (exprCast()) {
+			if (_exprMul()) {
+				return true;
+			}
+		}
+	}
+	iTk = start;
+	return true;
 }
 
 bool exprCast() {
-
+	Token *start = iTk;
+	if (consume(LPAR)) {
+		if (typeBase()) {
+			if (arrayDecl()) {}
+			if (consume(RPAR)) {
+				if (exprCast()) {
+					return true;
+				}
+			}
+		}
+	}
+	if (exprUnary()) {
+		return true;
+	}
+	iTk = start;
 	return false;
 }
 
 bool exprUnary() {
-
+	Token *start = iTk;
+	if (consume(SUB) || consume(NOT)) {
+		if (exprUnary()) {
+			return true;
+		}
+	}
+	if (exprPostfix()) {
+		return true;
+	}
+	iTk = start;
 	return false;
 }
 
 bool exprPostfix() {
-
+	if (exprPrimary()) {
+		if (_exprPostfix()) {
+			return true;
+		}
+	}
 	return false;
 }
 
 bool _exprPostfix() {
-
-	return false;
+	Token *start = iTk;
+	if (consume(LBRACKET)) {
+		if (expr()) {
+			if (consume(RBRACKET)) {
+				if (_exprPostfix()) {
+					return true;
+				}
+			}
+		}
+	}
+	if (consume(DOT)) {
+		if (consume(ID)) {
+			if (_exprPostfix()) {
+				return true;
+			}
+		}
+	}
+	iTk = start;
+	return true;
 }
 
 bool exprPrimary() {
+	Token *start = iTk;
+	if (consume(ID)) {
+		if (consume(LPAR)) {
+			if (expr()) {
+				while (consume(COMMA)) {
+					if (expr()) {}
+					else tkerr("Missing/invalid expression after comma");
+				}
+			}
+			if (consume(RPAR)) {}
+		}
+		return true;
+	}
+	if (consume(INT) || consume(DOUBLE) || consume(CHAR) || consume(STRING)) {
+		return true;
+	}
+	if (consume(LPAR)) {
+		if (expr()) {
+			if (consume(RPAR)) {
+				return true;
+			}
+		}
+	}
+	iTk = start;
 	return false;
 }
