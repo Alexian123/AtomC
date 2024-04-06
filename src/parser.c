@@ -23,14 +23,21 @@ static bool stmCompound();
 static bool expr();
 static bool exprAssign();
 static bool exprOr();
+static bool _exprOr();
 static bool exprAnd();
+static bool _exprAnd();
 static bool exprEq();
+static bool _exprEq();
 static bool exprRel();
+static bool _exprRel();
 static bool exprAdd();
+static bool _exprAdd();
 static bool exprMul();
+static bool _exprMul();
 static bool exprCast();
 static bool exprUnary();
 static bool exprPostfix();
+static bool _exprPostfix();
 static bool exprPrimary();
 
 void parse(Token *tokens) {
@@ -163,36 +170,122 @@ bool fnDef() {
 }
 
 bool fnParam() {
-
+	Token *start = iTk;
+	if (typeBase()) {
+		if (consume(ID)) {
+			if (arrayDecl()) {}
+			return true;
+		}
+	}
+	iTk = start;
 	return false;
 }
 
 bool stm() {
-
+	Token *start = iTk;
+	if (stmCompound()) {
+		return true;
+	}
+	if (consume(IF)) {
+		if (consume(LPAR)) {
+			if (expr()) {
+				if (consume(RPAR)) {
+					if (stm()) {
+						if (consume(ELSE)) {
+							if (stm()) {}
+							else tkerr("Empty else statement");
+						}
+						return true;
+					}
+				}
+			}
+		}
+	}
+	if (consume(WHILE)) {
+		if (consume(LPAR)) {
+			if (expr()) {
+				if (consume(RPAR)) {
+					if (stm()) {
+						return true;
+					}
+				}
+			}
+		}
+	}
+	if (consume(RETURN)) {
+		if (expr()) {}
+		if (consume(SEMICOLON)) {
+			return true;
+		}
+	}
+	if (expr()) {}
+	if (consume(SEMICOLON)) {
+		return true;
+	}
+	iTk = start;
 	return false;
 }
 
 bool stmCompound() {
-
+	Token *start = iTk;
+	if (consume(LACC)) {
+		while (varDef() || stm());
+		if (consume(RACC)) {
+			return true;
+		}
+	}
+	iTk = start;
 	return false;
 }
 
 bool expr() {
-
-	return false;
+	return exprAssign();
 }
 
 bool exprAssign() {
-
+	Token *start = iTk;
+	if (exprUnary()) {
+		if (consume(ASSIGN)) {
+			if (exprAssign()) {
+				return true;
+			}
+		}	
+	}
+	if (exprOr()) {
+		return true;
+	}
+	iTk = start;
 	return false;
 }
 
 bool exprOr() {
+	if (exprAnd()) {
+		if (_exprOr()) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool _exprOr() {
+	Token *start = iTk;
+	if (consume(OR)) {
+		if (exprAnd()) {
+			if (_exprOr()) {
+				return true;
+			}
+		}
+	}
+	iTk = start;
+	return true;
+}
+
+bool exprAnd() {
 
 	return false;
 }
 
-bool exprAnd() {
+bool _exprAnd() {
 
 	return false;
 }
@@ -202,7 +295,17 @@ bool exprEq() {
 	return false;
 }
 
+bool _exprEq() {
+
+	return false;
+}
+
 bool exprRel() {
+
+	return false;
+}
+
+bool _exprRel() {
 
 	return false;
 }
@@ -212,7 +315,17 @@ bool exprAdd() {
 	return false;
 }
 
+bool _exprAdd() {
+
+	return false;
+}
+
 bool exprMul() {
+
+	return false;
+}
+
+bool _exprMul() {
 
 	return false;
 }
@@ -228,6 +341,11 @@ bool exprUnary() {
 }
 
 bool exprPostfix() {
+
+	return false;
+}
+
+bool _exprPostfix() {
 
 	return false;
 }

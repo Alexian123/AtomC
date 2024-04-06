@@ -119,3 +119,31 @@ LINECOMMENT: '//' [^\n\r\0]*
 
 **exprPrimary**: ID ( LPAR ( **expr** ( COMMA **expr** )* )? RPAR )?<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| INT | DOUBLE | CHAR | STRING | LPAR **expr** RPAR
+
+### Handling left recursion
+
+A: A α_1 | … | A α_m | β_1 | … | βn&nbsp;&nbsp;→&nbsp;&nbsp;A: β_1 A’ | … | β_n A’<br>
+A’: α_1 A’ | … | α_m A’ | ε
+
+**exprOr**: **exprAnd** **exprOr_**<br>
+**_exprOr**: OR **exprAnd** **_exprOr** | ε
+
+**exprAnd**: **exprEq** **_exprAnd**<br>
+**_exprAnd** = AND **exprEq** **_exprAnd** | ε
+
+**exprEq**: **exprRel** **_exprEq**<br>
+**_exprEq**: ( EQUAL | NOTEQ) **exprRel** **_exprEq** | ε
+
+**exprRel** = **exprAdd** **_exprRel**<br>
+**_exprRel**: ( LESS | LESSEQ | GREATER | GREATEREQ ) **exprAdd** **_exprRel** | ε
+
+**exprAdd**: **exprMul** **_exprAdd**<br>
+**_exprAdd**: ( ADD | SUB ) **exprMul** **_exprAdd** | ε
+
+**exprMul**: **exprCast** **_exprMul**<br>
+**_exprMul**: ( MUL | DIV ) **exprCast** **_exprMul** | ε
+
+**exprPostfix**: **exprPrimary** **_exprPostfix**<br>
+**_exprPostfix**: LBRACKET **expr** RBRACKET **_exprPostfix**<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| DOT ID **_exprPostfix**<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| ε
