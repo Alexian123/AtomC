@@ -4,6 +4,19 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
+#define NUM_POSSIBLE_TOKENS 38
+#define MAX_TOKEN_NAME_LEN 16
+
+// must be in the same order as the Token codes
+static const char TOKEN_NAMES[NUM_POSSIBLE_TOKENS][MAX_TOKEN_NAME_LEN] = {
+	"ID",
+	"TYPE_INT", "TYPE_CHAR", "TYPE_DOUBLE", "IF", "ELSE", "WHILE", "VOID", "RETURN", "STRUCT",
+	"INT", "DOUBLE", "CHAR", "STRING",
+	"COMMA", "SEMICOLON", "LPAR", "RPAR", "LBRACKET", "RBRACKET", "LACC", "RACC", "END",
+	"ADD", "SUB", "MUL", "DIV", "DOT", "AND", "OR", "NOT", "ASSIGN", "EQUAL", "NOTEQ", "LESS", "LESSEQ", "GREATER", "GREATEREQ"
+};
+
+
 void err(const char *fmt, ...) {
 	fprintf(stderr, "Error: ");
 	va_list va;
@@ -38,4 +51,8 @@ char *loadFile(const char *fileName) {
 	}
 	buf[n] = '\0';
 	return buf;
+}
+
+extern const char *getTokenName(int code) {
+	return TOKEN_NAMES[code];
 }

@@ -10,4 +10,6 @@ extern void *safeAlloc(size_t nBytes);
 
 extern char *loadFile(const char *fileName);
 
+extern const char *getTokenName(int code);
+
 #endif

@@ -6,20 +6,8 @@
 #include <ctype.h>
 #include <string.h>
 
-#define NUM_POSSIBLE_TOKENS 38
-#define MAX_TOKEN_NAME_LEN 16
-
 // valid escape characters
 static const char *ESCAPE_CHARS = "nrt\\\'\"";
-
-// must be in the same order as the Token codes
-static const char TOKEN_NAMES[NUM_POSSIBLE_TOKENS][MAX_TOKEN_NAME_LEN] = {
-	"ID",
-	"TYPE_INT", "TYPE_CHAR", "TYPE_DOUBLE", "IF", "ELSE", "WHILE", "VOID", "RETURN", "STRUCT",
-	"INT", "DOUBLE", "CHAR", "STRING",
-	"COMMA", "SEMICOLON", "LPAR", "RPAR", "LBRACKET", "RBRACKET", "LACC", "RACC", "END",
-	"ADD", "SUB", "MUL", "DIV", "DOT", "AND", "OR", "NOT", "ASSIGN", "EQUAL", "NOTEQ", "LESS", "LESSEQ", "GREATER", "GREATEREQ"
-};
 
 static Token *tokens;	// single linked list of tokens
 static Token *lastTk;	// the last token in the list
@@ -38,7 +26,7 @@ static char *parseEscapeChars(const char *input);
 void showTokens(const Token *tokens) {
 	printf("LINE\tNAME:VALUE\n");
 	for (const Token *tk = tokens; tk != NULL; tk = tk->next) {
-		printf("%d\t\t%s", tk->line, TOKEN_NAMES[tk->code]);
+		printf("%d\t\t%s", tk->line, getTokenName(tk->code));
 		switch (tk->code) {
 			case ID:
 			case STRING:
