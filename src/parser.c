@@ -137,7 +137,7 @@ static bool varDef() {
 					printf("varDef returns true\n");
 				#endif
 				return true;
-			} else tkerr("Missing semicolon after variable definition");
+			} else tkerr("Missing semicolon after variable declaration");
 		}
 	}
 	iTk = tk;
@@ -281,7 +281,6 @@ bool stm() {
 			} else tkerr("Invalid/Missing \"if\" condition");
 		} else tkerr("Missing \"(\" after \"if\" statement");
 	}
-	iTk = tk;
 	if (consume(WHILE)) {
 		if (consume(LPAR)) {
 			if (expr()) {
@@ -296,7 +295,6 @@ bool stm() {
 			} else tkerr("Missing \"while\" condition");
 		} else tkerr("Missing \"(\" after \"while\" statement");
 	}
-	iTk = tk;
 	if (consume(RETURN)) {
 		if (expr()) {}
 		if (consume(SEMICOLON)) {
@@ -306,7 +304,6 @@ bool stm() {
 			return true;
 		} else tkerr("Missing semicolon after \"return\" statement");
 	}
-	iTk = tk;
 	if (expr()) {}
 	if (consume(SEMICOLON)) {
 		#ifdef DEBUG_MODE	// print function name for debugging purposes
@@ -344,14 +341,12 @@ bool expr() {
 	#ifdef DEBUG_MODE	// print function name for debugging purposes
 		printf("expr\n");
 	#endif
-	Token *tk = iTk;
 	if (exprAssign()) {
 		#ifdef DEBUG_MODE	// print function name for debugging purposes
 			printf("expr returns true\n");
 		#endif
 		return true;
 	}
-	iTk = tk;
 	#ifdef DEBUG_MODE	// print function name for debugging purposes
 		printf("expr returns false\n");
 	#endif
@@ -370,8 +365,8 @@ bool exprAssign() {
 					printf("exprAssign returns true\n");
 				#endif
 				return true;
-			}
-		}	
+			} else tkerr("Invalid/missing expression after \"=\" (assignment) operator");
+		} 
 	}
 	iTk = tk;
 	if (exprOr()) {
@@ -380,7 +375,6 @@ bool exprAssign() {
 		#endif
 		return true;
 	}
-	iTk = tk;
 	#ifdef DEBUG_MODE	// print function name for debugging purposes
 		printf("exprAssign returns false\n");
 	#endif
@@ -391,7 +385,6 @@ bool exprOr() {
 	#ifdef DEBUG_MODE	// print function name for debugging purposes
 		printf("exprOr\n");
 	#endif
-	Token *tk = iTk;
 	if (exprAnd()) {
 		if (_exprOr()) {
 			#ifdef DEBUG_MODE	// print function name for debugging purposes
@@ -400,7 +393,6 @@ bool exprOr() {
 			return true;
 		}
 	}
-	iTk = tk;
 	#ifdef DEBUG_MODE	// print function name for debugging purposes
 		printf("exprOr returns false\n");
 	#endif
@@ -411,7 +403,6 @@ bool _exprOr() {
 	#ifdef DEBUG_MODE	// print function name for debugging purposes
 		printf("_exprOr\n");
 	#endif
-	Token *tk = iTk;
 	if (consume(OR)) {
 		if (exprAnd()) {
 			if (_exprOr()) {
@@ -422,7 +413,6 @@ bool _exprOr() {
 			}
 		} else tkerr("Invalid/missing expression after \"||\" (logical or) operator");
 	}
-	iTk = tk;
 	#ifdef DEBUG_MODE	// print function name for debugging purposes
 		printf("_exprOr returns true\n");
 	#endif
@@ -433,7 +423,6 @@ bool exprAnd() {
 	#ifdef DEBUG_MODE	// print function name for debugging purposes
 		printf("exprAnd\n");
 	#endif
-	Token *tk = iTk;
 	if (exprEq()) {
 		if (_exprAnd()) {
 			#ifdef DEBUG_MODE	// print function name for debugging purposes
@@ -442,7 +431,6 @@ bool exprAnd() {
 			return true;
 		}
 	}
-	iTk = tk;
 	#ifdef DEBUG_MODE	// print function name for debugging purposes
 		printf("exprAnd returns false\n");
 	#endif
@@ -453,7 +441,6 @@ bool _exprAnd() {
 #ifdef DEBUG_MODE	// print function name for debugging purposes
 	printf("_exprAnd\n");
 #endif
-	Token *tk = iTk;
 	if (consume(AND)) {
 		if (exprEq()) {
 			if (_exprAnd()) {
@@ -462,9 +449,8 @@ bool _exprAnd() {
 				#endif
 				return true;
 			}
-		} 
+		} else tkerr("Invalid/missing expression after \"&&\" (logical and) operator");
 	}
-	iTk = tk;
 	#ifdef DEBUG_MODE	// print function name for debugging purposes
 		printf("_exprAnd returns true\n");
 	#endif
@@ -475,7 +461,6 @@ bool exprEq() {
 	#ifdef DEBUG_MODE	// print function name for debugging purposes
 		printf("exprEq\n");
 	#endif
-	Token *tk = iTk;
 	if (exprRel()) {
 		if (_exprEq()) {
 			#ifdef DEBUG_MODE	// print function name for debugging purposes
@@ -484,7 +469,6 @@ bool exprEq() {
 			return true;
 		}
 	}
-	iTk = tk;
 	#ifdef DEBUG_MODE	// print function name for debugging purposes
 		printf("exprEq returns false\n");
 	#endif
@@ -495,7 +479,6 @@ bool _exprEq() {
 	#ifdef DEBUG_MODE	// print function name for debugging purposes
 		printf("_exprEq\n");
 	#endif
-	Token *tk = iTk;
 	if (consume(EQUAL) || consume(NOTEQ)) {
 		if (exprRel()) {
 			if (_exprEq()) {
@@ -504,9 +487,8 @@ bool _exprEq() {
 				#endif
 				return true;
 			}
-		}
+		} else tkerr("Invalid/missing expression after equality operator");
 	}
-	iTk = tk;
 	#ifdef DEBUG_MODE	// print function name for debugging purposes
 		printf("_exprEq returns true\n");
 	#endif
@@ -517,7 +499,6 @@ bool exprRel() {
 	#ifdef DEBUG_MODE	// print function name for debugging purposes
 		printf("exprRel\n");
 	#endif
-	Token *tk = iTk;
 	if (exprAdd()) {
 		if (_exprRel()) {
 			#ifdef DEBUG_MODE	// print function name for debugging purposes
@@ -526,7 +507,6 @@ bool exprRel() {
 			return true;
 		}
 	}
-	iTk = tk;
 	#ifdef DEBUG_MODE	// print function name for debugging purposes
 		printf("exprRel returns false\n");
 	#endif
@@ -537,7 +517,6 @@ bool _exprRel() {
 	#ifdef DEBUG_MODE	// print function name for debugging purposes
 		printf("_exprRel\n");
 	#endif
-	Token *tk = iTk;
 	if (consume(LESS) || consume(LESSEQ) || consume(GREATER) || consume(GREATEREQ)) {
 		if (exprAdd()) {
 			if (_exprRel()) {
@@ -546,9 +525,8 @@ bool _exprRel() {
 				#endif
 				return true;
 			}
-		}
+		} else tkerr("Invalid/missing expression after relational operator");
 	}
-	iTk = tk;
 	#ifdef DEBUG_MODE	// print function name for debugging purposes
 		printf("_exprRel returns true\n");
 	#endif
@@ -559,7 +537,6 @@ bool exprAdd() {
 	#ifdef DEBUG_MODE	// print function name for debugging purposes
 		printf("exprAdd\n");
 	#endif
-	Token *tk = iTk;
 	if (exprMul()) {
 		if (_exprAdd()) {
 			#ifdef DEBUG_MODE	// print function name for debugging purposes
@@ -568,7 +545,6 @@ bool exprAdd() {
 			return true;
 		}
 	}
-	iTk = tk;
 	#ifdef DEBUG_MODE	// print function name for debugging purposes
 		printf("exprAdd returns false\n");
 	#endif
@@ -579,7 +555,6 @@ bool _exprAdd() {
 	#ifdef DEBUG_MODE	// print function name for debugging purposes
 		printf("_exprAdd\n");
 	#endif
-	Token *tk = iTk;
 	if (consume(ADD) || consume(SUB)) {
 		if (exprMul()) {
 			if (_exprAdd()) {
@@ -588,9 +563,8 @@ bool _exprAdd() {
 				#endif
 				return true;
 			}
-		}
+		} else tkerr("Invalid/missing expression after addition/subtraction operator");
 	}
-	iTk = tk;
 	#ifdef DEBUG_MODE	// print function name for debugging purposes
 		printf("_exprAdd returns true\n");
 	#endif
@@ -601,7 +575,6 @@ bool exprMul() {
 	#ifdef DEBUG_MODE	// print function name for debugging purposes
 		printf("exprMul\n");
 	#endif
-	Token *tk = iTk;
 	if (exprCast()) {
 		if (_exprMul()) {
 			#ifdef DEBUG_MODE	// print function name for debugging purposes
@@ -610,7 +583,6 @@ bool exprMul() {
 			return true;
 		}
 	}
-	iTk = tk;
 	#ifdef DEBUG_MODE	// print function name for debugging purposes
 		printf("exprMul returns false\n");
 	#endif
@@ -621,7 +593,6 @@ bool _exprMul() {
 	#ifdef DEBUG_MODE	// print function name for debugging purposes
 		printf("_exprMul\n");
 	#endif
-	Token *tk = iTk;
 	if (consume(MUL) || consume(DIV)) {
 		if (exprCast()) {
 			if (_exprMul()) {
@@ -630,9 +601,8 @@ bool _exprMul() {
 				#endif
 				return true;
 			}
-		}
+		} else tkerr("Invalid/missing expression after multiplication/division operator");
 	}
-	iTk = tk;
 	#ifdef DEBUG_MODE	// print function name for debugging purposes
 		printf("_exprMul returns true\n");
 	#endif
@@ -643,7 +613,6 @@ bool exprCast() {
 	#ifdef DEBUG_MODE	// print function name for debugging purposes
 		printf("exprCast\n");
 	#endif
-	Token *tk = iTk;
 	if (consume(LPAR)) {
 		if (typeBase()) {
 			if (arrayDecl()) {}
@@ -655,16 +624,14 @@ bool exprCast() {
 					return true;
 				} else tkerr("Invalid/missing expression to be casted");
 			} else tkerr("Missing \")\" after cast expression");
-		}
+		} else tkerr("Invalid/missing cast type");
 	}
-	iTk = tk;
 	if (exprUnary()) {
 		#ifdef DEBUG_MODE	// print function name for debugging purposes
 			printf("exprCast returns true\n");
 		#endif
 		return true;
 	}
-	iTk = tk;
 	#ifdef DEBUG_MODE	// print function name for debugging purposes
 		printf("exprCast returns false\n");
 	#endif
@@ -675,23 +642,20 @@ bool exprUnary() {
 	#ifdef DEBUG_MODE	// print function name for debugging purposes
 		printf("exprUnary\n");
 	#endif
-	Token *tk = iTk;
 	if (consume(SUB) || consume(NOT)) {
 		if (exprUnary()) {
 			#ifdef DEBUG_MODE	// print function name for debugging purposes
 				printf("exprUnary returns true\n");
 			#endif
 			return true;
-		}
+		} else tkerr("Invalid/missing expression after \"-\" / \"!\"");
 	}
-	iTk = tk;
 	if (exprPostfix()) {
 		#ifdef DEBUG_MODE	// print function name for debugging purposes
 			printf("exprUnary returns true\n");
 		#endif
 		return true;
 	}
-	iTk = tk;
 	#ifdef DEBUG_MODE	// print function name for debugging purposes
 		printf("exprUnary returns false\n");
 	#endif
@@ -702,7 +666,6 @@ bool exprPostfix() {
 	#ifdef DEBUG_MODE	// print function name for debugging purposes
 		printf("exprPostfix\n");
 	#endif
-	Token *tk = iTk;
 	if (exprPrimary()) {
 		if (_exprPostfix()) {
 			#ifdef DEBUG_MODE	// print function name for debugging purposes
@@ -711,7 +674,6 @@ bool exprPostfix() {
 			return true;
 		}
 	}
-	iTk = tk;
 	#ifdef DEBUG_MODE	// print function name for debugging purposes
 		printf("exprPostfix returns false\n");
 	#endif
@@ -722,7 +684,6 @@ bool _exprPostfix() {
 	#ifdef DEBUG_MODE	// print function name for debugging purposes
 		printf("_exprPostfix\n");
 	#endif
-	Token *tk = iTk;
 	if (consume(LBRACKET)) {
 		if (expr()) {
 			if (consume(RBRACKET)) {
@@ -733,9 +694,8 @@ bool _exprPostfix() {
 					return true;
 				} else tkerr("Invalid/missing expression after \"]\"");
 			} else tkerr("Missing \"]\" after expression");
-		}
+		} else tkerr("Invalid/missing expression after \"[\"");
 	}
-	iTk = tk;
 	if (consume(DOT)) {
 		if (consume(ID)) {
 			if (_exprPostfix()) {
@@ -744,9 +704,8 @@ bool _exprPostfix() {
 				#endif
 				return true;
 			}
-		}
+		} else tkerr("Invalid/missing identifier after \".\" (dot) operator");
 	}
-	iTk = tk;
 	#ifdef DEBUG_MODE	// print function name for debugging purposes
 		printf("_exprPostfix returns true\n");
 	#endif
@@ -757,7 +716,6 @@ bool exprPrimary() {
 	#ifdef DEBUG_MODE	// print function name for debugging purposes
 		printf("exprPrimary\n");
 	#endif
-	Token *tk = iTk;
 	if (consume(ID)) {
 		if (consume(LPAR)) {
 			if (expr()) {
@@ -774,7 +732,6 @@ bool exprPrimary() {
 		#endif
 		return true;
 	}
-	iTk = tk;
 	if (consume(INT) || consume(DOUBLE) || consume(CHAR) || consume(STRING)) {
 		#ifdef DEBUG_MODE	// print function name for debugging purposes
 			printf("exprPrimary returns true\n");
@@ -789,9 +746,8 @@ bool exprPrimary() {
 				#endif
 				return true;
 			} else tkerr("Missing \")\" after expression");
-		} 
+		} else tkerr("Invalid/missing expression after \"(\"");
 	}
-	iTk = tk;
 	#ifdef DEBUG_MODE	// print function name for debugging purposes
 		printf("exprPrimary return false\n");
 	#endif

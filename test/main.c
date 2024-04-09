@@ -17,6 +17,8 @@ int main(int argc, char **argv) {
     Token *tokens = tokenize(file_buf);
     free(file_buf);
 
+    showTokens(tokens);
+
     // Parser
     parse(tokens);
 

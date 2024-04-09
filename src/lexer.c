@@ -73,7 +73,6 @@ Token *tokenize(const char *pch) {
 			case '+': addTk(ADD); ++pch; break;
 			case '-': addTk(SUB); ++pch; break;
 			case '*': addTk(MUL); ++pch; break;
-			case '!': addTk(NOT); ++pch; break;
 			case '.': 
 				if (isalpha(pch[1])) {
 					addTk(DOT); 
@@ -89,6 +88,16 @@ Token *tokenize(const char *pch) {
 				} else {
 					addTk(DIV);
 					++pch;
+				}
+				break;
+
+			case '!': 
+				if (pch[1] == '=') {
+					addTk(NOTEQ);
+					pch += 2;
+				} else {
+					addTk(NOT); 
+					++pch; 
 				}
 				break;
 
