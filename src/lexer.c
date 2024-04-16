@@ -74,7 +74,7 @@ Token *tokenize(const char *pch) {
 			case '-': addTk(SUB); ++pch; break;
 			case '*': addTk(MUL); ++pch; break;
 			case '.': 
-				if (isalpha(pch[1])) {
+				if (isalpha(pch[1]) || pch[1] == '_') {
 					addTk(DOT); 
 					++pch; 
 					break;
@@ -217,7 +217,7 @@ Token *tokenize(const char *pch) {
 						tk = addTk(DOUBLE);
 						tk->d = atof(text);
 						free(text);
-					}  else {	// integer
+					} else {	// integer
 						text = extract(start, pch);
 						tk = addTk(INT);
 						tk->i = atoi(text);

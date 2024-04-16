@@ -89,7 +89,7 @@ struct Symbol
 /* returns the size of type t in bytes */
 int typeSize(Type *t);
 
-/* dynamically allocation of a new symbol */
+/* dynamic allocation of a new symbol */
 Symbol *newSymbol(const char *name, SymKind kind);
 
 /* duplicates the given symbol */
@@ -123,28 +123,28 @@ Domain *pushDomain();
 void dropDomain();
 
 /* shows the content of the given domain */
-void showDomain(Domain *d,const char *name);
+void showDomain(Domain *d, const char *name);
 
 /* 
-	search a symbol with the given name in the specified domain and returns it
-	if no symbol find, returns NULL
+	searches for a symbol with the given name in the specified domain and returns it
+	if no symbol is found, returns NULL
 */
-Symbol *findSymbolInDomain(Domain *d,const char *name);
+Symbol *findSymbolInDomain(Domain *d, const char *name);
 
 /* searches a symbol in all domains, starting with the current one */
 Symbol *findSymbol(const char *name);
 
 /* adds a symbol to the current domain */
-Symbol *addSymbolToDomain(Domain *d,Symbol *s);
+Symbol *addSymbolToDomain(Domain *d, Symbol *s);
 
 /* add in ST an extern function with the given name, address and return type */
-Symbol *addExtFn(const char *name,void(*extFnPtr)(),Type ret);
+Symbol *addExtFn(const char *name, void (*extFnPtr)(), Type ret);
 
 /* 
 	add to fn a parameter with the given name and type
  	it doesn't verify for parameter redefinition
  	returns the added parameter
 */
-Symbol *addFnParam(Symbol *fn,const char *name,Type type);
+Symbol *addFnParam(Symbol *fn, const char *name, Type type);
 
 #endif
