@@ -77,19 +77,19 @@ LINECOMMENT: '//' [^\n\r\0]*
 // inside the struct two or more variables cannot share the same name
 structDef: STRUCT ID[tkName] LACC
     {
-    Symbol *s=findSymbolInDomain(symTable,tkName->text);
-    if(s)tkerr("symbol redefinition: %s",tkName->text);
-    s=addSymbolToDomain(symTable,newSymbol(tkName->text,SK_STRUCT));
-    s->type.tb=TB_STRUCT;
-    s->type.s=s;
-    s->type.n=-1;
-    pushDomain();
-    owner=s;
+        Symbol *s = findSymbolInDomain(symTable, tkName->text);
+        if (s) tkerr("Symbol redefinition: %s", tkName->text);
+        s = addSymbolToDomain(symTable, newSymbol(tkName->text, SK_STRUCT));
+        s->type.tb = TB_STRUCT;
+        s->type.s = s;
+        s->type.n = -1;
+        pushDomain();
+        owner = s;
     }
     varDef* RACC SEMICOLON
     {
-    owner=NULL;
-    dropDomain();
+        owner = NULL;
+        dropDomain();
     }
 ```
 <br>
@@ -98,31 +98,31 @@ structDef: STRUCT ID[tkName] LACC
 ```c
 // variable name must be unique in the domain
 // arrays must have the given dimension (int v[] is not valid)
-varDef: {Type t;} typeBase[&t] ID[tkName]
+varDef: { Type t; } typeBase[&t] ID[tkName]
     ( arrayDecl[&t]
-    {if(t.n==0)tkerr("An array must have a specified dimension");}
+    { if (t.n == 0) tkerr("An array must have a specified dimension"); }
     )? SEMICOLON
     {
-    Symbol *var=findSymbolInDomain(symTable,tkName->text);
-    if(var)tkerr("symbol redefinition: %s",tkName->text);
-    var=newSymbol(tkName->text,SK_VAR);
-    var->type=t;
-    var->owner=owner;
-    addSymbolToDomain(symTable,var);
-    if(owner){
-    switch(owner->kind){
-    case SK_FN:
-    var->varIdx=symbolsLen(owner->fn.locals);
-    addSymbolToList(&owner->fn.locals,dupSymbol(var));
-    break;
-    case SK_STRUCT:
-    var->varIdx=typeSize(&owner->type);
-    addSymbolToList(&owner->structMembers,dupSymbol(var));
-    break;
-    }
-    }else{
-    var->varMem=safeAlloc(typeSize(&t));
-    }
+        Symbol *var = findSymbolInDomain(symTable, tkName->text);
+        if (var) tkerr("Symbol redefinition: %s", tkName->text);
+        var = newSymbol(tkName->text, SK_VAR);
+        var->type = t;
+        var->owner = owner;
+        addSymbolToDomain(symTable, var);
+        if (owner) {
+            switch (owner->kind) {
+                case SK_FN:
+                    var->varIdx = symbolsLen(owner->fn.locals);
+                    addSymbolToList(&owner->fn.locals, dupSymbol(var));
+                    break;
+                case SK_STRUCT:
+                    var->varIdx = typeSize(&owner->type);
+                    addSymbolToList(&owner->structMembers, dupSymbol(var));
+                    break;
+            }
+        } else {
+            var->varMem = safeAlloc(typeSize(&t));
+        }
     }
 ```
 <br>
@@ -130,16 +130,16 @@ varDef: {Type t;} typeBase[&t] ID[tkName]
 **typeBase**
 ```c
 // if the base type is a struct, it must have been defined earlier 
-typeBase[out Type *t]: {t->n=-1;}
+typeBase[out Type *t]: { t->n = -1; }
     (
-    INT {t->tb=TB_INT;}
-    | DOUBLE {t->tb=TB_DOUBLE;}
-    | CHAR {t->tb=TB_CHAR;}
+    INT { t->tb=TB_INT; }
+    | DOUBLE { t->tb=TB_DOUBLE; }
+    | CHAR { t->tb=TB_CHAR; }
     | STRUCT ID[tkName]
     {
-    t->tb=TB_STRUCT;
-    t->s=findSymbol(tkName->text);
-    if(!t->s)tkerr("structura nedefinita: %s",tkName->text);
+        t->tb = TB_STRUCT;
+        t->s = findSymbol(tkName->text);
+        if (!t->s) tkerr("Undefined struct: %s", tkName->text);
     }
     )
 ```
@@ -148,7 +148,7 @@ typeBase[out Type *t]: {t->n=-1;}
 **arrayDecl**
 ```c
 arrayDecl[inout Type *t]: LBRACKET
-    ( INT[tkSize] {t->n=tkSize->i;} | {t->n=0;} )
+    ( INT[tkSize] { t->n = tkSize->i; } | { t->n = 0; } )
     RBRACKET
 ```
 <br>
@@ -158,21 +158,21 @@ arrayDecl[inout Type *t]: LBRACKET
 // function name must be unique in the domain
 // function local domain starts immediately after LPAR
 // function body {...} does not define a new subdomain inside the function local domain
-fnDef: {Type t;}
-    ( typeBase[&t] | VOID {t.tb=TB_VOID;} ) ID[tkName] LPAR
+fnDef: { Type t; }
+    ( typeBase[&t] | VOID { t.tb = TB_VOID; } ) ID[tkName] LPAR
     {
-    Symbol *fn=findSymbolInDomain(symTable,tkName->text);
-    if(fn)tkerr("symbol redefinition: %s",tkName->text);
-    fn=newSymbol(tkName->text,SK_FN);
-    fn->type=t;
-    addSymbolToDomain(symTable,fn);
-    owner=fn;
-    pushDomain();
+        Symbol *fn = findSymbolInDomain(symTable, tkName->text);
+        if (fn) tkerr("Symbol redefinition: %s", tkName->text);
+        fn = newSymbol(tkName->text, SK_FN);
+        fn->type = t;
+        addSymbolToDomain(symTable, fn);
+        owner = fn;
+        pushDomain();
     }
     ( fnParam ( COMMA fnParam )* )? RPAR stmCompound[false]
     {
-    dropDomain();
-    owner=NULL;
+        dropDomain();
+        owner = NULL;
     }
 ```
 <br>
@@ -181,18 +181,18 @@ fnDef: {Type t;}
 ```c
 // parameter name must be unique in the domain
 // parameters can be arrays with a given dimension, but in this case the dimension will be deleterd (int v[10] -> int v[])
-fnParam: {Type t;} typeBase[&t] ID[tkName]
-    (arrayDecl[&t] {t.n=0;} )?
+fnParam: { Type t; } typeBase[&t] ID[tkName]
+    (arrayDecl[&t] { t.n = 0; } )?
     {
-    Symbol *param=findSymbolInDomain(symTable,tkName->text);
-    if(param)tkerr("symbol redefinition: %s",tkName->text);
-    param=newSymbol(tkName->text,SK_PARAM);
-    param->type=t;
-    param->owner=owner;
-    param->paramIdx=symbolsLen(owner->fn.params);
-    // the parameter is added in the current domain as well as in the function parameters
-    addSymbolToDomain(symTable,param);
-    addSymbolToList(&owner->fn.params,dupSymbol(param));
+        Symbol *param = findSymbolInDomain(symTable, tkName->text);
+        if (param) tkerr("symbol redefinition: %s", tkName->text);
+        param = newSymbol(tkName->text, SK_PARAM);
+        param->type = t;
+        param->owner = owner;
+        param->paramIdx = symbolsLen(owner->fn.params);
+        // the parameter is added in the current domain as well as in the function parameters
+        addSymbolToDomain(symTable, param);
+        addSymbolToList(&owner->fn.params, dupSymbol(param));
     }
 ```
 <br>
@@ -212,9 +212,9 @@ stm: stmCompound[true]
 ```c
 // a new domain is defined only on demand
 stmCompound[in bool newDomain]: LACC
-    {if(newDomain)pushDomain();}
+    { if (newDomain) pushDomain(); }
     ( varDef | stm )* RACC
-    {if(newDomain)dropDomain();}
+    { if (newDomain) dropDomain(); }
 ```
 <br>
 
@@ -238,7 +238,7 @@ stmCompound[in bool newDomain]: LACC
 ```c
 // an argument is added because it is required by typeBase and arrayDecl
 // t will be used later
-exprCast: LPAR {Type t;} typeBase[&t] arrayDecl[&t]? RPAR exprCast | exprUnary
+exprCast: LPAR { Type t; } typeBase[&t] arrayDecl[&t]? RPAR exprCast | exprUnary
 ```
 <br>
 
