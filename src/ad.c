@@ -4,7 +4,6 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
 
 Domain *symTable = NULL;
 
@@ -29,10 +28,12 @@ int typeBaseSize(Type *t) {
 }
 
 int typeSize(Type *t) {
-	if (t->n < 0)
+	if (t->n < 0) {
 		return typeBaseSize(t);
-	if (t->n == 0)
+	}
+	if (t->n == 0) {
 		return sizeof(void*);
+	}
 	return t->n * typeBaseSize(t);
 }
 
@@ -114,82 +115,87 @@ void dropDomain() {
 	free(d);
 }
 
-void showNamedType(Type *t, const char *name) {
+void showNamedType(Type *t, const char *name, FILE *stream) {
 	switch (t->tb) {
-		case TB_INT:			printf("int");break;
-		case TB_DOUBLE:			printf("double");break;
-		case TB_CHAR:			printf("char");break;
-		case TB_VOID:			printf("void");break;
-		default:/*TB_STRUCT*/	printf("struct %s",t->s->name);
+		case TB_INT:			fprintf(stream, "int"); break;
+		case TB_DOUBLE:			fprintf(stream, "double"); break;
+		case TB_CHAR:			fprintf(stream, "char"); break;
+		case TB_VOID:			fprintf(stream, "void"); break;
+		default:/*TB_STRUCT*/	fprintf(stream, "struct %s",t->s->name);
 	}
-	if (name)
-		printf(" %s",name);
-	if (t->n == 0)
-		printf("[]");
-	else if (t->n > 0)
-		printf("[%d]",t->n);
+	if (name) {
+		fprintf(stream, " %s", name);
+	}
+	if (t->n == 0) {
+		fprintf(stream, "[]");
+	}
+	else if (t->n > 0) {
+		fprintf(stream, "[%d]", t->n);
+	}
 }
 
-void showSymbol(Symbol *s) {
+void showSymbol(Symbol *s, FILE *stream) {
 	switch (s->kind) {
 			case SK_VAR:
-				showNamedType(&s->type,s->name);
+				showNamedType(&s->type, s->name, stream);
 				if (s->owner) {
-					printf(";\t// size=%d, idx=%d\n",typeSize(&s->type),s->varIdx);
+					fprintf(stream, ";\t// size=%d, idx=%d\n", typeSize(&s->type), s->varIdx);
 				} else {
-					printf(";\t// size=%d, mem=%p\n",typeSize(&s->type),s->varMem);
+					fprintf(stream, ";\t// size=%d, mem=%p\n", typeSize(&s->type), s->varMem);
 				}
 				break;
 			case SK_PARAM: 
 				{
-					showNamedType(&s->type,s->name);
-					printf(" /*size=%d, idx=%d*/",typeSize(&s->type),s->paramIdx);
+					showNamedType(&s->type,s->name, stream);
+					fprintf(stream, " /*size=%d, idx=%d*/", typeSize(&s->type), s->paramIdx);
 				}
 				break;
 			case SK_FN: 
 				{
-					showNamedType(&s->type, s->name);
-					printf("(");
+					showNamedType(&s->type, s->name, stream);
+					fprintf(stream, "(");
 					bool next = false;
 					for(Symbol *param = s->fn.params; param; param = param->next) {
-						if (next) 
-							printf(", ");
-						showSymbol(param);
+						if (next) {
+							fprintf(stream, ", ");
+						}
+						showSymbol(param, stream);
 						next = true;
 					}
-					printf("){\n");
+					fprintf(stream, "){\n");
 					for(Symbol *local = s->fn.locals; local; local = local->next) {
-						printf("\t");
-						showSymbol(local);
+						fprintf(stream, "\t");
+						showSymbol(local, stream);
 					}
-					printf("\t}\n");
+					fprintf(stream, "\t}\n");
 				}
 				break;
 			case SK_STRUCT:
 				{
-					printf("struct %s{\n", s->name);
+					fprintf(stream, "struct %s{\n", s->name);
 					for (Symbol *m = s->structMembers; m; m = m->next) {
-						printf("\t");
-						showSymbol(m);
+						fprintf(stream, "\t");
+						showSymbol(m, stream);
 					}
-					printf("\t};\t// size=%d\n", typeSize(&s->type));
+					fprintf(stream, "\t};\t// size=%d\n", typeSize(&s->type));
 				}
 				break;
 	}
 }
 
-void showDomain(Domain *d, const char *name) {
-	printf("// domain: %s\n", name);
+void showDomain(Domain *d, const char *name, FILE *stream) {
+	fprintf(stream, "// domain: %s\n", name);
 	for (Symbol *s = d->symbols; s; s = s->next) {
-		showSymbol(s);
+		showSymbol(s, stream);
 	}
-	puts("\n");
+	fputs("\n", stream);
 }
 
 Symbol *findSymbolInDomain(Domain *d, const char *name) {
 	for(Symbol *s = d->symbols; s; s = s->next) {
-		if (!strcmp(s->name, name))
+		if (!strcmp(s->name, name)) {
 			return s;
+		}
 	}
 	return NULL;
 }
@@ -197,8 +203,9 @@ Symbol *findSymbolInDomain(Domain *d, const char *name) {
 Symbol *findSymbol(const char *name) {
 	for(Domain *d = symTable; d; d = d->parent) {
 		Symbol *s = findSymbolInDomain(d, name);
-		if (s)
+		if (s) {
 			return s;
+		}
 	}
 	return NULL;
 }

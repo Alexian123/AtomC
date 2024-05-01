@@ -37,5 +37,6 @@ typedef struct _Token
 
 extern Token *tokenize(const char *pch);
 extern void showTokens(const Token *tokens, FILE *stream);
+extern void freeTokens(Token *tokens);
 
 #endif

@@ -8,7 +8,7 @@ ID: ^[a-zA-Z_][a-zA-Z0-9_]*$
 ```
 
 ### Keywords
-```
+```c
 TYPE_INT: "int"
 TYPE_CHAR: "char"
 TYPE_DOUBLE: "double"
@@ -29,7 +29,7 @@ STRING: ["] [^"]* ["]
 ```
 
 ### Delimiters
-```
+```c
 COMMA: ','
 SEMICOLON: ';'
 LPAR: '('
@@ -42,7 +42,7 @@ END: '\0' | EOF
 ```
 
 ### Operators
-```
+```c
 ADD: '+'
 SUB: '-'
 MUL: '*'
@@ -72,7 +72,7 @@ LINECOMMENT: '//' [^\n\r\0]*
 **unit**: ( **structDef** | **fnDef** | **varDef** )* END<br>
 
 **structDef**
-```
+```c
 // struct name must be unique in the domain
 // inside the struct two or more variables cannot share the same name
 structDef: STRUCT ID[tkName] LACC
@@ -95,7 +95,7 @@ structDef: STRUCT ID[tkName] LACC
 <br>
 
 **varDef**
-```
+```c
 // variable name must be unique in the domain
 // arrays must have the given dimension (int v[] is not valid)
 varDef: {Type t;} typeBase[&t] ID[tkName]
@@ -128,7 +128,7 @@ varDef: {Type t;} typeBase[&t] ID[tkName]
 <br>
 
 **typeBase**
-```
+```c
 // if the base type is a struct, it must have been defined earlier 
 typeBase[out Type *t]: {t->n=-1;}
     (
@@ -146,15 +146,15 @@ typeBase[out Type *t]: {t->n=-1;}
 <br>
 
 **arrayDecl**
-```
+```c
 arrayDecl[inout Type *t]: LBRACKET
-    ( CT_INT[tkSize] {t->n=tkSize->i;} | {t->n=0;} )
+    ( INT[tkSize] {t->n=tkSize->i;} | {t->n=0;} )
     RBRACKET
 ```
 <br>
 
 **fnDef**
-```
+```c
 // function name must be unique in the domain
 // function local domain starts immediately after LPAR
 // function body {...} does not define a new subdomain inside the function local domain
@@ -178,7 +178,7 @@ fnDef: {Type t;}
 <br>
 
 **fnParam**
-```
+```c
 // parameter name must be unique in the domain
 // parameters can be arrays with a given dimension, but in this case the dimension will be deleterd (int v[10] -> int v[])
 fnParam: {Type t;} typeBase[&t] ID[tkName]
@@ -198,7 +198,7 @@ fnParam: {Type t;} typeBase[&t] ID[tkName]
 <br>
 
 **stm**
-```
+```c
 // common body {...} of instruction defines a new domain
 stm: stmCompound[true]
     | IF LPAR expr RPAR stm ( ELSE stm )?
@@ -209,7 +209,7 @@ stm: stmCompound[true]
 <br>
 
 **stmCompound**
-```
+```c
 // a new domain is defined only on demand
 stmCompound[in bool newDomain]: LACC
     {if(newDomain)pushDomain();}
@@ -235,7 +235,7 @@ stmCompound[in bool newDomain]: LACC
 **exprMul**: **exprMul** ( MUL | DIV ) **exprCast** | **exprCast**<br>
 
 **exprCast**
-```
+```c
 // an argument is added because it is required by typeBase and arrayDecl
 // t will be used later
 exprCast: LPAR {Type t;} typeBase[&t] arrayDecl[&t]? RPAR exprCast | exprUnary

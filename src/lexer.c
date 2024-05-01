@@ -51,6 +51,18 @@ void showTokens(const Token *tokens, FILE *stream) {
 	fprintf(stream, "\n");
 }
 
+void freeTokens(Token *tokens) {
+	Token *tokenIter = NULL;
+	while (tokens) {
+		tokenIter = tokens;
+		if (tokenIter->code == ID || tokenIter->code == STRING) {
+			free(tokenIter->text);
+		}
+		tokens = tokens->next;
+		free(tokenIter);
+	}
+}
+
 Token *tokenize(const char *pch) {
 	const char *start;
 	char *text;

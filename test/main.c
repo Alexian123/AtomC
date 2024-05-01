@@ -7,6 +7,7 @@
 #include "ad.h"
 
 #define TOKEN_LIST_FILE "test/token_list.txt"
+#define GLOBAL_DOMAIN_FILE "test/global_domain.txt"
 
 int main(int argc, char **argv) {
 
@@ -14,11 +15,12 @@ int main(int argc, char **argv) {
         err("Usage: %s <source_file.atomc>", argv[0]);
     }
 
-    // Load source file and create streams for output
+    // Load source file and create output streams
     char *file_buf = loadFile(argv[1]);
     FILE *token_list_stream = createOutputStream(TOKEN_LIST_FILE);
+    FILE *global_domain_stream = createOutputStream(GLOBAL_DOMAIN_FILE);
 
-    // Lexer
+    // Run lexer
     Token *tokens = tokenize(file_buf);
     free(file_buf);
     showTokens(tokens, token_list_stream);
@@ -27,15 +29,16 @@ int main(int argc, char **argv) {
     // Create global domain
     pushDomain();
 
-    // Parser
+    // Run parser
     parse(tokens);
 
-    // Print gloal domain
-    showDomain(symTable, "global");
+    // Show global domain
+    showDomain(symTable, "global", global_domain_stream);
+    fclose(global_domain_stream);
 
     // Cleanup memory
     dropDomain();
-    free(tokens);
+    freeTokens(tokens);
 
     return 0;
 }

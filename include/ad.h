@@ -2,6 +2,7 @@
 #define __AD_H__
 
 #include "vm.h"
+#include <stdio.h>
 
 /* Domain Analysis */
 
@@ -123,7 +124,7 @@ extern Domain *pushDomain();
 extern void dropDomain();
 
 /* shows the content of the given domain */
-extern void showDomain(Domain *d, const char *name);
+extern void showDomain(Domain *d, const char *name, FILE *stream);
 
 /* 
 	searches for a symbol with the given name in the specified domain and returns it
