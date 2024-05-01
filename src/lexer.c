@@ -23,32 +23,32 @@ static char *extract(const char *begin, const char *end);
 // returns a new string after parsing the escape characters from the input string
 static char *parseEscapeChars(const char *input);
 
-void showTokens(const Token *tokens) {
-	printf("LINE\tNAME:VALUE\n");
+void showTokens(const Token *tokens, FILE *stream) {
+	fprintf(stream, "LINE\tNAME:VALUE\n");
 	for (const Token *tk = tokens; tk != NULL; tk = tk->next) {
-		printf("%d\t\t%s", tk->line, getTokenName(tk->code));
+		fprintf(stream, "%d\t\t%s", tk->line, getTokenName(tk->code));
 		switch (tk->code) {
 			case ID:
 			case STRING:
-				printf(":%s\n", tk->text);
+				fprintf(stream, ":%s\n", tk->text);
 				break;
 			case INT:
-				printf(":%d\n", tk->i);
+				fprintf(stream, ":%d\n", tk->i);
 				break;
 			case DOUBLE:
-				printf(":%.10f\n", tk->d);
+				fprintf(stream, ":%.10f\n", tk->d);
 				break;
 			case CHAR:
-				if (tk->c == '\n') printf(":\\n\n");
-				else if (tk->c == '\r') printf(":\\r\n");
-				else if (tk->c =='\t') printf(":\\t\n");
-				else printf(":%c\n", tk->c);
+				if (tk->c == '\n') fprintf(stream, ":\\n\n");
+				else if (tk->c == '\r') fprintf(stream, ":\\r\n");
+				else if (tk->c =='\t') fprintf(stream, ":\\t\n");
+				else fprintf(stream, ":%c\n", tk->c);
 				break;
 			default:
-				printf("\n");
+				fprintf(stream, "\n");
 		}
 	}
-	printf("\n");
+	fprintf(stream, "\n");
 }
 
 Token *tokenize(const char *pch) {

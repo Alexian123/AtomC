@@ -1,6 +1,5 @@
 #include "utils.h"
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 
@@ -51,6 +50,14 @@ char *loadFile(const char *fileName) {
 	}
 	buf[n] = '\0';
 	return buf;
+}
+
+FILE *createOutputStream(const char *fileName) {
+	FILE *stream = fopen(fileName, "w");
+	if (!stream) {
+		err("Error opening file: %s", fileName);
+	}
+	return stream;
 }
 
 extern const char *getTokenName(int code) {

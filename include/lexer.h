@@ -1,6 +1,8 @@
 #ifndef __LEXER_H__
 #define __LEXER_H__
 
+#include <stdio.h>
+
 // Token codes
 enum 
 {
@@ -34,6 +36,6 @@ typedef struct _Token
 } Token;
 
 extern Token *tokenize(const char *pch);
-extern void showTokens(const Token *tokens);
+extern void showTokens(const Token *tokens, FILE *stream);
 
 #endif

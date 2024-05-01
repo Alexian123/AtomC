@@ -13,7 +13,7 @@ SRCS=$(wildcard $(SRC)/*.c)
 OBJS=$(patsubst $(SRC)/%.c, $(OBJ)/%.o, $(SRCS))
 TEST_BIN=$(TEST)/main
 TEST_SRC=$(TEST)/main.c
-SAMPLE_FILE=$(TEST)/samples/testparser.c
+SAMPLE_FILE=$(TEST)/samples/testad.c
 
 all: $(OBJS) $(TEST_BIN)
 
@@ -21,12 +21,12 @@ test: $(TEST_BIN)
 
 objs: $(OBJS)
 
-run: all
+run: clean all
 	./$(TEST_BIN) $(SAMPLE_FILE)
 
 clean:
 	find . -type f | xargs touch
-	$(RM) $(RMFLAGS) $(OBJ) $(TEST_BIN)
+	$(RM) $(RMFLAGS) $(OBJ) $(TEST_BIN) $(TEST)/*.txt
 
 $(TEST_BIN): $(TEST_SRC)
 	$(CC) $(CFLAGS) $(TEST_SRC) $(OBJS) -o $@ $(LIBS)

@@ -86,27 +86,6 @@ struct Symbol
 	};
 };
 
-/* returns the size of type t in bytes */
-int typeSize(Type *t);
-
-/* dynamic allocation of a new symbol */
-Symbol *newSymbol(const char *name, SymKind kind);
-
-/* duplicates the given symbol */
-Symbol *dupSymbol(Symbol *symbol);
-
-/* 
-	adds the symbol the the end of the list
-	list - the address of the list where to add the symbol
-*/
-Symbol *addSymbolToList(Symbol **list, Symbol *s);
-
-/* the number of the symbols in list */
-int symbolsLen(Symbol *list);
-
-/* frees the memory of a symbol */
-void freeSymbol(Symbol *s);
-
 typedef struct _Domain
 {
 	struct _Domain *parent;	// the parent domain
@@ -116,35 +95,56 @@ typedef struct _Domain
 /* the current domain (the top of the domains's stack) */
 extern Domain *symTable;
 
+/* returns the size of type t in bytes */
+extern int typeSize(Type *t);
+
+/* dynamic allocation of a new symbol */
+extern Symbol *newSymbol(const char *name, SymKind kind);
+
+/* duplicates the given symbol */
+extern Symbol *dupSymbol(Symbol *symbol);
+
+/* 
+	adds the symbol the the end of the list
+	list - the address of the list where to add the symbol
+*/
+extern Symbol *addSymbolToList(Symbol **list, Symbol *s);
+
+/* the number of the symbols in list */
+extern int symbolsLen(Symbol *list);
+
+/* frees the memory of a symbol */
+extern void freeSymbol(Symbol *s);
+
 /* adds a domain to the top of the domains's stack */
-Domain *pushDomain(); 
+extern Domain *pushDomain(); 
 
 /* deletes the domain from the top of the domains's stack */
-void dropDomain();
+extern void dropDomain();
 
 /* shows the content of the given domain */
-void showDomain(Domain *d, const char *name);
+extern void showDomain(Domain *d, const char *name);
 
 /* 
 	searches for a symbol with the given name in the specified domain and returns it
 	if no symbol is found, returns NULL
 */
-Symbol *findSymbolInDomain(Domain *d, const char *name);
+extern Symbol *findSymbolInDomain(Domain *d, const char *name);
 
 /* searches a symbol in all domains, starting with the current one */
-Symbol *findSymbol(const char *name);
+extern Symbol *findSymbol(const char *name);
 
 /* adds a symbol to the current domain */
-Symbol *addSymbolToDomain(Domain *d, Symbol *s);
+extern Symbol *addSymbolToDomain(Domain *d, Symbol *s);
 
 /* add in ST an extern function with the given name, address and return type */
-Symbol *addExtFn(const char *name, void (*extFnPtr)(), Type ret);
+extern Symbol *addExtFn(const char *name, void (*extFnPtr)(), Type ret);
 
 /* 
 	add to fn a parameter with the given name and type
  	it doesn't verify for parameter redefinition
  	returns the added parameter
 */
-Symbol *addFnParam(Symbol *fn, const char *name, Type type);
+extern Symbol *addFnParam(Symbol *fn, const char *name, Type type);
 
 #endif

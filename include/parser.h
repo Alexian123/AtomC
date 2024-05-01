@@ -3,6 +3,6 @@
 
 #include "lexer.h"
 
-void parse(Token *tokens);
+extern void parse(Token *tokens);
 
 #endif
