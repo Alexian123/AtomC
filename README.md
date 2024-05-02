@@ -67,9 +67,96 @@ LINECOMMENT: '//' [^\n\r\0]*
 ```
 
 
-## Syntax/Domain Rules
 
-**unit**: ( **structDef** | **fnDef** | **varDef** )* END<br>
+## Syntax Rules
+
+**unit**: ( **structDef** | **fnDef** | **varDef** )* END
+
+**structDef**: STRUCT ID LACC **varDef*** RACC SEMICOLON
+
+**varDef**: **typeBase** ID **arrayDecl**? SEMICOLON
+
+**typeBase**: TYPE_INT | TYPE_DOUBLE | TYPE_CHAR | STRUCT ID
+
+**arrayDecl**: LBRACKET INT? RBRACKET
+
+**fnDef**: ( **typeBase** | VOID ) ID<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;LPAR ( **fnParam** ( COMMA **fnParam** )* )? RPAR<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;**stmCompound**
+
+**fnParam**: **typeBase** ID **arrayDecl**?
+
+**stm**: **stmCompound**<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| IF LPAR **expr** RPAR **stm** ( ELSE **stm** )?<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| WHILE LPAR **expr** RPAR **stm**<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| RETURN **expr**? SEMICOLON<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| **expr**? SEMICOLON
+
+**stmCompound**: LACC ( **varDef** | **stm** )* RACC
+
+**expr**: **exprAssign**
+
+**exprAssign**: **exprUnary** ASSIGN **exprAssign** | **exprOr**
+
+**exprOr**: **exprOr** OR **exprAnd** | **exprAnd**
+
+**exprAnd**: **exprAnd** AND **exprEq** | **exprEq**
+
+**exprEq**: **exprEq** ( EQUAL | NOTEQ ) **eexprRel** | **exprRel**
+
+**exprRel**: **exprRel** ( LESS | LESSEQ | GREATER | GREATEREQ ) **exprAdd** | **exprAdd**
+
+**exprAdd**: **exprAdd** ( ADD | SUB ) **exprMul** | **exprMul**
+
+**exprMul**: **exprMul** ( MUL | DIV ) **exprCast** | **exprCast**
+
+**exprCast**: LPAR **typeBase** **arrayDecl**? RPAR **exprCast** | **exprUnary**
+
+**exprUnary**: ( SUB | NOT ) **exprUnary** | **exprPostfix**
+
+**exprPostfix**: **exprPostfix** LBRACKET **expr** RBRACKET<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| **exprPostfix** DOT ID<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| **exprPrimary**
+
+**exprPrimary**: ID ( LPAR ( **expr** ( COMMA **expr** )* )? RPAR )?<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| INT | DOUBLE | CHAR | STRING | LPAR **expr** RPAR
+
+
+### Handling left recursion
+
+**Formula**<br>
+```
+A: A α_1 | … | A α_m | β_1 | … | βn A: β_1 A’ | … | β_n A’
+A’: α_1 A’ | … | α_m A’ | ε
+```
+
+**exprOr**: **exprAnd** **exprOr_**<br>
+**_exprOr**: OR **exprAnd** **_exprOr** | ε
+
+**exprAnd**: **exprEq** **_exprAnd**<br>
+**_exprAnd** = AND **exprEq** **_exprAnd** | ε
+
+**exprEq**: **exprRel** **_exprEq**<br>
+**_exprEq**: ( EQUAL | NOTEQ) **exprRel** **_exprEq** | ε
+
+**exprRel** = **exprAdd** **_exprRel**<br>
+**_exprRel**: ( LESS | LESSEQ | GREATER | GREATEREQ ) **exprAdd** **_exprRel** | ε
+
+**exprAdd**: **exprMul** **_exprAdd**<br>
+**_exprAdd**: ( ADD | SUB ) **exprMul** **_exprAdd** | ε
+
+**exprMul**: **exprCast** **_exprMul**<br>
+**_exprMul**: ( MUL | DIV ) **exprCast** **_exprMul** | ε
+
+**exprPostfix**: **exprPrimary** **_exprPostfix**<br>
+**_exprPostfix**: LBRACKET **expr** RBRACKET **_exprPostfix**<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| DOT ID **_exprPostfix**<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| ε
+
+
+
+
+## Domain Analysis
 
 **structDef**
 ```c
@@ -218,22 +305,6 @@ stmCompound[in bool newDomain]: LACC
 ```
 <br>
 
-**expr**: **exprAssign**<br>
-
-**exprAssign**: **exprUnary** ASSIGN **exprAssign** | **exprOr**<br>
-
-**exprOr**: **exprOr** OR **exprAnd** | **exprAnd**<br>
-
-**exprAnd**: **exprAnd** AND **exprEq** | **exprEq**<br>
-
-**exprEq**: **exprEq** ( EQUAL | NOTEQ ) **eexprRel** | **exprRel**<br>
-
-**exprRel**: **exprRel** ( LESS | LESSEQ | GREATER | GREATEREQ ) **exprAdd** | **exprAdd**<br>
-
-**exprAdd**: **exprAdd** ( ADD | SUB ) **exprMul** | **exprMul**<br>
-
-**exprMul**: **exprMul** ( MUL | DIV ) **exprCast** | **exprCast**<br>
-
 **exprCast**
 ```c
 // an argument is added because it is required by typeBase and arrayDecl
@@ -242,42 +313,253 @@ exprCast: LPAR { Type t; } typeBase[&t] arrayDecl[&t]? RPAR exprCast | exprUnary
 ```
 <br>
 
-**exprUnary**: ( SUB | NOT ) **exprUnary** | **exprPostfix**<br>
 
-**exprPostfix**: **exprPostfix** LBRACKET **expr** RBRACKET<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| **exprPostfix** DOT ID<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| **exprPrimary**<br>
 
-**exprPrimary**: ID ( LPAR ( **expr** ( COMMA **expr** )* )? RPAR )?<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| INT | DOUBLE | CHAR | STRING | LPAR **expr** RPAR<br><br>
+## Type Analysis
 
-### Handling left recursion
-
-**Formula**<br>
+**stm**
+```c
+// IF - condition must be a scalar
+// WHILE - condition must be a scalar
+// RETURN - expression must be a scalar
+// RETURN - void functions cannot return a value
+// RETURN - non-void functions must return an expression of a type which is convertible to the return type
+stm: { Ret rCond,rExpr; } stmCompound[true]
+    | IF LPAR expr[&rCond]
+        { if (!canBeScalar(&rCond)) tkerr("The \"if\" condition must be a scalar value"); }
+        RPAR stm ( ELSE stm )?
+    | WHILE LPAR expr[&rCond]
+        { if (!canBeScalar(&rCond)) tkerr("The \"while\" condition must be a scalar value"); }
+        RPAR stm
+    | RETURN ( expr[&rExpr]?
+        {
+            if (owner->type.tb == TB_VOID) tkerr("A void function cannot return a value");
+            if (!canBeScalar(&rExpr)) tkerr("The return value must be a scalar value");
+            if (!convTo(&rExpr.type, &owner->type)) tkerr("Cannot convert the return expression type to the function return type");
+        }
+        |
+        { if (owner->type.tb != TB_VOID) tkerr("a non-void function must return a value"); }
+        ) SEMICOLON
+    | expr[&rExpr]? SEMICOLON
 ```
-A: A α_1 | … | A α_m | β_1 | … | βn A: β_1 A’ | … | β_n A’
-A’: α_1 A’ | … | α_m A’ | ε
+<br>
+
+**expr**
+```c
+expr[out Ret *r]: exprAssign[r]
 ```
+<br>
 
-**exprOr**: **exprAnd** **exprOr_**<br>
-**_exprOr**: OR **exprAnd** **_exprOr** | ε
+**exprAssign**
+```c
+// Destination must be lval
+// Destination cannot be a constant
+// Both operands must be scalars
+// Source must be convertible to destination
+// Resulted type must be the source type
+exprAssign[out Ret *r]: { Ret rDst; } exprUnary[&rDst] ASSIGN exprAssign[r]
+    {
+        if (!rDst.lval) tkerr("The assignment destination must be a left-value");
+        if (rDst.ct) tkerr("The assignment destination cannot be a constant");
+        if (!canBeScalar(&rDst)) tkerr("The assignment destination must be a scalar");
+        if (!canBeScalar(r)) tkerr("The assignment source must be a scalar");
+        if (!convTo(&r->type, &rDst.type)) tkerr("The assignment source cannot be converted to the destination");
+        r->lval = false;
+        r->ct = true;
+    }
+    | exprOr[r]
+```
+<br>
 
-**exprAnd**: **exprEq** **_exprAnd**<br>
-**_exprAnd** = AND **exprEq** **_exprAnd** | ε
+**exprOr**
+```c
+// Both operands must be scalars and not structs
+// Result must be an int
+exprOr[out Ret *r]: exprOr[r] OR { Ret right; } exprAnd[&right]
+    {
+        Type tDst;
+        if (!arithTypeTo(&r->type, &right.type, &tDst)) tkerr("Invalid operand type for ||");
+        *r = (Ret) { { TB_INT, NULL, -1 }, false, true };
+    }
+    | exprAnd[r]
+```
+<br>
 
-**exprEq**: **exprRel** **_exprEq**<br>
-**_exprEq**: ( EQUAL | NOTEQ) **exprRel** **_exprEq** | ε
+**exprAnd**
+```c
+// Both operands must be scalars and not structs
+// Result must be an int
+exprAnd[out Ret *r]: exprAnd[r] AND { Ret right; } exprEq[&right]
+    {
+        Type tDst;
+        if (!arithTypeTo(&r->type, &right.type, &tDst)) tkerr("Invalid operand type for &&");
+        *r = (Ret) { { TB_INT, NULL, -1 }, false, true};
+    }
+    | exprEq[r]
+```
+<br>
 
-**exprRel** = **exprAdd** **_exprRel**<br>
-**_exprRel**: ( LESS | LESSEQ | GREATER | GREATEREQ ) **exprAdd** **_exprRel** | ε
 
-**exprAdd**: **exprMul** **_exprAdd**<br>
-**_exprAdd**: ( ADD | SUB ) **exprMul** **_exprAdd** | ε
+**exprEq**
+```c
+// Both operands must be scalars and not structs
+// Result must be an int
+exprEq[out Ret *r]: exprEq[r] ( EQUAL | NOTEQ ) { Ret right; } exprRel[&right]
+    {
+        Type tDst;
+        if (!arithTypeTo(&r->type, &right.type, &tDst)) tkerr("Invalid operand type for == or !=");
+        *r = (Ret) { { TB_INT, NULL, -1 }, false, true };
+    }
+    | exprRel[r]
+```
+<br>
 
-**exprMul**: **exprCast** **_exprMul**<br>
-**_exprMul**: ( MUL | DIV ) **exprCast** **_exprMul** | ε
+**exprRel**
+```c
+// Both operands must be scalars and not structs
+// Result must be an int
+exprRel[out Ret *r]: exprRel[r] ( LESS | LESSEQ | GREATER | GREATEREQ ) { Ret right; }
+exprAdd[&right]
+    {
+        Type tDst;
+        if (!arithTypeTo(&r->type, &right.type, &tDst)) tkerr("invalid operand type for <, <=, >, >=");
+        *r = (Ret) { { TB_INT, NULL, -1 }, false, true };
+    }
+    | exprAdd[r]
+```
+<br>
 
-**exprPostfix**: **exprPrimary** **_exprPostfix**<br>
-**_exprPostfix**: LBRACKET **expr** RBRACKET **_exprPostfix**<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| DOT ID **_exprPostfix**<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| ε
+**exprAdd**
+```c
+// Both operands must be scalars and not structs
+exprAdd[out Ret *r]: exprAdd[r] ( ADD | SUB ) { Ret right; } exprMul[&right]
+    {
+        Type tDst;
+        if (!arithTypeTo(&r->type, &right.type, &tDst)) tkerr("Invalid operand type for + or -");
+        *r = (Ret) { tDst, false, true };
+    }
+    | exprMul[r]
+```
+<br>
+
+**exprMul**
+```c
+// Both operands must be scalars and not structs
+exprMul[out Ret *r]: exprMul[r] ( MUL | DIV ) { Ret right; } exprCast[&right]
+    {
+        Type tDst;
+        if (!arithTypeTo(&r->type, &right.type, &tDst)) tkerr("Invalid operand type for * or /");
+        *r = (Ret) { tDst, false, true };
+    }
+    | exprCast[r]
+```
+<br>
+
+**exprCast**
+```c
+// Struct cannot be converted
+// The type to convert to cannot be a struct
+// An array can only be converted to another array
+// A scalar can only be converted to another scalar
+exprCast[out Ret *r]: LPAR { Type t;Ret op; } typeBase[&t] arrayDecl[&t]? RPAR
+exprCast[&op]
+    {
+        if (t.tb == TB_STRUCT) tkerr("Cannot convert to a struct type");
+        if (op.type.tb == TB_STRUCT) tkerr("Cannot convert a struct");
+        if (op.type.n >= 0 && t.n < 0) tkerr("An array can only be converted to another array");
+        if (op.type.n < 0 && t.n >= 0) tkerr("A scalar can only be converted to another scalar");
+        *r = (Ret) { t, false, true };
+    }
+    | exprUnary[r]
+```
+<br>
+
+**exprUnary**
+```c
+// Minus and Not must have a scalar operand
+// Result of Not is an int
+exprUnary[out Ret *r]: ( SUB | NOT ) exprUnary[r]
+    {
+        if (!canBeScalar(r)) tkerr("Unary - or ! must have a scalar operand");
+        r->lval = false;
+        r->ct = true;
+    }
+    | exprPostfix[r]
+```
+<br>
+
+
+**exprPostfix**
+```c
+// Only an array can be indexed
+// Array index must be convertible to int
+// Dot operator is aplicable only to structs
+// Struct field must exist
+exprPostfix[out Ret *r]: exprPostfix[r] LBRACKET { Ret idx; } expr[&idx] RBRACKET
+        {
+            if (r->type.n < 0) tkerr("Only an array can be indexed");
+            Type tInt = { TB_INT, NULL, -1 };
+            if (!convTo(&idx.type, &tInt)) tkerr("The index is not convertible to int");
+            r->type.n = -1;
+            r->lval = true;
+            r->ct = false;
+        }
+    | exprPostfix[r] DOT ID[tkName]
+        {
+            if (r->type.tb != TB_STRUCT ) tkerr("A field can only be selected from a struct");
+            Symbol *s = findSymbolInList(r->type.s->structMembers, tkName->text);
+            if (!s) tkerr("The struct %s does not have a field %s", r->type.s->name, tkName->text);
+            *r = (Ret) { s->type, true, s->type.n >= 0 };
+        }
+    | exprPrimary[r]
+```
+<br>
+
+**exprPrimary**
+```c
+// ID must exist in the table of symbols
+// Only functions can be called
+// A function can only be called
+// A function call must have the same number of arguments as parameters in its definition
+// Argument types from a function call must be convertible to the function's parameter types
+exprPrimary[out Ret *r]: ID[tkName]
+    {
+        Symbol *s = findSymbol(tkName->text);
+        if (!s) tkerr("Undefined identifier: %s",tkName->text);
+    }
+    ( LPAR
+    {
+        if (s->kind != SK_FN) tkerr("Only a function can be called");
+        Ret rArg;
+        Symbol *param = s->fn.params;
+    }
+    ( expr[&rArg]
+    {
+        if (!param) tkerr("Too many arguments in function call");
+        if (!convTo(&rArg.type, &param->type)) tkerr("Cannot convert the argument type to the parameter type during function call");
+        param = param->next;
+    }
+    ( COMMA expr[&rArg]
+    {
+        if (!param) tkerr("Too many arguments in function call");
+        if (!convTo(&rArg.type,&param->type)) tkerr("Cannot convert the argument type to the parameter type during function call");
+        param = param->next;
+    }
+    )* )? RPAR
+    {
+        if (param) tkerr("Too few arguments in function call");
+        *r = (Ret) { s->type, false, true };
+    }
+    |
+    {
+        if (s->kind == SK_FN) tkerr("A function can only be called");
+        *r = (Ret) { s->type, true, s->type.n >= 0 };
+    }
+    )
+    | INT       { *r = (Ret) { { TB_INT,    NULL, -1 }, false, true }; }
+    | DOUBLE    { *r = (Ret) { { TB_DOUBLE, NULL, -1 }, false, true }; }
+    | CHAR      { *r = (Ret) { { TB_CHAR,   NULL, -1 }, false, true }; }
+    | STRING    { *r = (Ret) { { TB_CHAR,   NULL,  0 }, false, true }; }
+    | LPAR expr[r] RPAR
+```
+<br>
