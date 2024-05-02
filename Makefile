@@ -13,7 +13,7 @@ SRCS=$(wildcard $(SRC)/*.c)
 OBJS=$(patsubst $(SRC)/%.c, $(OBJ)/%.o, $(SRCS))
 TEST_BIN=$(TEST)/main
 TEST_SRC=$(TEST)/main.c
-SAMPLE_FILE=$(TEST)/samples/testad.c
+SAMPLE_FILE=$(TEST)/samples/testat.c
 
 all: $(OBJS) $(TEST_BIN)
 

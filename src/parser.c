@@ -52,7 +52,7 @@ void parse(Token *tokens) {
 }
 
 void tkerr(const char *fmt, ...) {
-	fprintf(stderr, "Error in line %d: ", iTk->line);
+	fprintf(stderr, "Error at line %d: ", iTk->line);
 	va_list va;
 	va_start(va, fmt);
 	vfprintf(stderr, fmt, va);
@@ -149,7 +149,7 @@ static bool varDef() {
 				}
 				return true;
 			} else tkerr("Missing semicolon after variable declaration");
-		} else tkerr("Missing/invalid variable identifier after base type");
+		} else tkerr("Missing/invalid identifier after base type");
 	}
 	iTk = tk;
 	return false;
@@ -176,7 +176,7 @@ bool typeBase(Type *t) {
 			t->s = findSymbol(tkName->text);
 			if (!t->s) tkerr("Undefined struct: %s", tkName->text);
 			return true;
-		} else tkerr("Missing identifier after \"struct\" keyword");
+		} else tkerr("Missing struct identifier");
 	}
 	return false;
 }
@@ -252,7 +252,7 @@ bool fnParam() {
 			addSymbolToDomain(symTable, param);
 			addSymbolToList(&owner->fn.params, dupSymbol(param));
 			return true;
-		}
+		} else tkerr("Missing/invalid identifier after base type");
 	}
 	iTk = tk;
 	return false;
@@ -392,12 +392,19 @@ bool exprEq() {
 }
 
 bool _exprEq() {
-	if (consume(EQUAL) || consume(NOTEQ)) {
+	if (consume(EQUAL)) {
 		if (exprRel()) {
 			if (_exprEq()) {
 				return true;
 			}
-		} else tkerr("Invalid/missing expression after equality operator");
+		} else tkerr("Invalid/missing expression after \"==\" (EQUAL) operator");
+	}
+	if (consume(NOTEQ)) {
+		if (exprRel()) {
+			if (_exprEq()) {
+				return true;
+			}
+		} else tkerr("Invalid/missing expression after \"!=\" (NOT EQUAL) operator");
 	}
 	return true;
 }
@@ -516,10 +523,15 @@ bool exprCast() {
 }
 
 bool exprUnary() {
-	if (consume(SUB) || consume(NOT)) {
+	if (consume(SUB)) {
 		if (exprUnary()) {
 			return true;
-		} else tkerr("Invalid/missing expression after \"-\" / \"!\"");
+		} else tkerr("Invalid/missing expression after \"-\"");
+	}
+	if (consume(NOT)) {
+		if (exprUnary()) {
+			return true;
+		} else tkerr("Invalid/missing expression after \"!\"");
 	}
 	if (exprPostfix()) {
 		return true;
@@ -562,7 +574,7 @@ bool exprPrimary() {
 			if (expr()) {
 				while (consume(COMMA)) {
 					if (expr()) {}
-					else tkerr("Missing/invalid expression after comma");
+					else tkerr("Missing/invalid expression after \",\"");
 				}
 			}
 			if (consume(RPAR)) {
