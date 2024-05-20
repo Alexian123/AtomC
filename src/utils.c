@@ -1,10 +1,14 @@
 #include "utils.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <unistd.h>
 
 #define NUM_POSSIBLE_TOKENS 38
 #define MAX_TOKEN_NAME_LEN 16
+
+static int stdout_fd = -1;
 
 // must be in the same order as the Token codes
 static const char TOKEN_NAMES[NUM_POSSIBLE_TOKENS][MAX_TOKEN_NAME_LEN] = {
@@ -14,7 +18,6 @@ static const char TOKEN_NAMES[NUM_POSSIBLE_TOKENS][MAX_TOKEN_NAME_LEN] = {
 	"COMMA", "SEMICOLON", "LPAR", "RPAR", "LBRACKET", "RBRACKET", "LACC", "RACC", "END",
 	"ADD", "SUB", "MUL", "DIV", "DOT", "AND", "OR", "NOT", "ASSIGN", "EQUAL", "NOTEQ", "LESS", "LESSEQ", "GREATER", "GREATEREQ"
 };
-
 
 void err(const char *fmt, ...) {
 	fprintf(stderr, "Error: ");
@@ -58,6 +61,24 @@ FILE *createOutputStream(const char *fileName) {
 		err("Error opening file: %s", fileName);
 	}
 	return stream;
+}
+
+void redirectStdoutToFile(const char *fileName) {
+	stdout_fd = dup(fileno(stdout));
+	if (stdout_fd == -1) {
+		err("Error redirecting stdout");
+	}
+	if (!freopen(fileName, "w", stdout)) {
+		err("Error opening file %s", fileName);
+	}
+}
+
+void restoreStdout() {
+	fflush(stdout);
+	if (dup2(stdout_fd, fileno(stdout)) == -1) {
+		err("Error restoring stdout");
+	}
+	close(stdout_fd);
 }
 
 extern const char *getTokenName(int code) {

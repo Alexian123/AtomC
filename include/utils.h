@@ -13,6 +13,10 @@ extern char *loadFile(const char *fileName);
 
 extern FILE *createOutputStream(const char *fileName);
 
+extern void redirectStdoutToFile(const char *fileName);
+
+extern void restoreStdout();
+
 extern const char *getTokenName(int code);
 
 #endif
