@@ -219,7 +219,6 @@ void run(Instr *IP) {
 				IP = IP->next;
 				break;
 
-
 			case OP_LESS_F:
 				fTop = popf();
 				fBefore = popf();
@@ -234,72 +233,12 @@ void run(Instr *IP) {
 				printf("ADD.f\t// %g+%g -> %g", fBefore, fTop, fBefore + fTop);
 				IP = IP->next;
 				break;
-			
-
-			// added for code generation
-			case OP_CONV_F_I:
-				fTop = popf();
-				pushi((int)fTop);
-				printf("CONV.f.i\t// %g -> %d", fTop, (int)fTop);
-				IP = IP->next;
-				break;
-			case OP_DROP:
-				popv();
-				printf("DROP");
-				IP = IP->next;
-				break;
 			case OP_PUSH_F:
 				printf("PUSH.f\t%g", IP->arg.f);
 				pushf(IP->arg.f);
 				IP = IP->next;
 				break;
-			case OP_FPADDR_I:
-				pTop = &FP[IP->arg.i].i;
-				pushp(pTop);
-				printf("FPADDR\t%d\t// %p", IP->arg.i, pTop);
-				IP = IP->next;
-				break;
-			case OP_LOAD_I:
-				pTop = popp();
-				pushi(*(int *)pTop);
-				printf("LOAD.i\t// *(int*)%p -> %d", pTop, *(int *)pTop);
-				IP = IP->next;
-				break;
-			case OP_NOP:
-				printf("NOP");
-				IP = IP->next;
-				break;
-			case OP_RET:
-				v = popv();
-				iArg = IP->arg.i;
-				printf("RET\t%d\t// i:%d, f:%g", iArg, v.i, v.f);
-				IP = FP[-1].p;
-				SP = FP - iArg - 2;
-				FP = FP[0].p;
-				pushv(v);
-				break;
-			case OP_SUB_I:
-				iTop = popi();
-				iBefore = popi();
-				pushi(iBefore - iTop);
-				printf("SUB.i\t// %d-%d -> %d", iBefore, iTop, iBefore - iTop);
-				IP = IP->next;
-				break;
-			case OP_MUL_I:
-				iTop = popi();
-				iBefore = popi();
-				pushi(iBefore * iTop);
-				printf("MUL.i\t// %d*%d -> %d", iBefore, iTop, iBefore * iTop);
-				IP = IP->next;
-				break;
-			case OP_STORE_I:
-				iTop = popi();
-				v = popv();
-				*(int *)v.p = iTop;
-				pushi(iTop);
-				printf("STORE.i\t// *(int*)%p=%d", v.p, iTop);
-				IP = IP->next;
-				break;
+			
 			default:
 				err("Run: instruction not implemented: %d", IP->op);
 		}
